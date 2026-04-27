@@ -1,0 +1,908 @@
+[
+  {
+    "id": "f1",
+    "name": "Amber Oud No.1",
+    "type": "EDP",
+    "family": "Oriental/Woody",
+    "notes": "Warm oud-amber with dry sandalwood base.",
+    "createdAt": "2025-01-10",
+    "ingredients": [
+      {
+        "materialName": "Oud Oil Cambodian",
+        "percentage": 2
+      },
+      {
+        "materialName": "Labdanum Resinoid",
+        "percentage": 3.5
+      },
+      {
+        "materialName": "Sandalwood EO Mysore",
+        "percentage": 1.5
+      },
+      {
+        "materialName": "Ambroxan",
+        "percentage": 1
+      },
+      {
+        "materialName": "Karanal",
+        "percentage": 4
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 2
+      },
+      {
+        "materialName": "Frankincense EO carterii",
+        "percentage": 1.5
+      }
+    ]
+  },
+  {
+    "id": "f2",
+    "name": "Rose Musq Accord",
+    "type": "EDP",
+    "family": "Floral/Musky",
+    "notes": "Clean rose over musky skin base.",
+    "createdAt": "2025-02-05",
+    "ingredients": [
+      {
+        "materialName": "Rose Absolute Bulgaria",
+        "percentage": 1
+      },
+      {
+        "materialName": "Phenylethyl Alcohol",
+        "percentage": 5
+      },
+      {
+        "materialName": "Citronellol",
+        "percentage": 3
+      },
+      {
+        "materialName": "Geraniol",
+        "percentage": 2
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 2
+      },
+      {
+        "materialName": "Ethylene Brassylate",
+        "percentage": 3
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 4
+      }
+    ]
+  },
+  {
+    "id": "f3",
+    "name": "Nilam Noir",
+    "type": "EDP",
+    "family": "Earthy/Oriental",
+    "notes": "Indonesian materials: nilam, cengkeh, cendana, akar wangi.",
+    "createdAt": "2025-03-01",
+    "ingredients": [
+      {
+        "materialName": "Patchouli EO Dark",
+        "percentage": 6
+      },
+      {
+        "materialName": "Clove Leaf EO Cengkeh",
+        "percentage": 0.5
+      },
+      {
+        "materialName": "Cendana Timor EO",
+        "percentage": 3
+      },
+      {
+        "materialName": "Vetiver EO Java (Akar Wangi)",
+        "percentage": 2
+      },
+      {
+        "materialName": "Cananga EO Kenanga",
+        "percentage": 1
+      },
+      {
+        "materialName": "Benzoin Resinoid Sumatra",
+        "percentage": 4
+      },
+      {
+        "materialName": "Ambroxan",
+        "percentage": 1.5
+      }
+    ]
+  },
+  {
+    "id": "fv2_1",
+    "name": "Coca-Cola Accord",
+    "type": "Base/Accord",
+    "family": "Gourmand/Spicy/Citrus",
+    "notes": "Source: @pax.formulas. Spiced cola accord. Units: parts/1000.",
+    "createdAt": "2025-03-22",
+    "ingredients": [
+      {
+        "materialName": "Cinnamon Bark EO",
+        "percentage": 40
+      },
+      {
+        "materialName": "Lime EO Distilled",
+        "percentage": 500
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 20
+      },
+      {
+        "materialName": "Nutmeg EO Pala",
+        "percentage": 15
+      },
+      {
+        "materialName": "Ethyl Maltol",
+        "percentage": 30
+      },
+      {
+        "materialName": "Lemon EO",
+        "percentage": 40
+      },
+      {
+        "materialName": "Orange Sweet EO",
+        "percentage": 15
+      },
+      {
+        "materialName": "Linalool",
+        "percentage": 5
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 335
+      }
+    ]
+  },
+  {
+    "id": "fv2_2",
+    "name": "Mimosa Accord",
+    "type": "Base/Accord",
+    "family": "Floral/Powdery",
+    "notes": "Source: @pax.formulas. Sunny mimosa-floral. Units: parts/1000.",
+    "createdAt": "2025-03-28",
+    "ingredients": [
+      {
+        "materialName": "Undecavertol",
+        "percentage": 240
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 236
+      },
+      {
+        "materialName": "Heliotropin",
+        "percentage": 118
+      },
+      {
+        "materialName": "Florol",
+        "percentage": 120
+      },
+      {
+        "materialName": "Beta Ionone",
+        "percentage": 100
+      },
+      {
+        "materialName": "Iso E Super",
+        "percentage": 46
+      }
+    ]
+  },
+  {
+    "id": "fv2_3",
+    "name": "Super Fusion (JUS Parfums)",
+    "type": "Base/Accord",
+    "family": "Woody/Floral/Oriental",
+    "notes": "Source: @perfume.archaeology / JUSparfums.com. Complex modern woody-floral. Units: parts/1000.",
+    "createdAt": "2025-03-15",
+    "ingredients": [
+      {
+        "materialName": "Coumarin",
+        "percentage": 30
+      },
+      {
+        "materialName": "Heliotropin",
+        "percentage": 10
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 150
+      },
+      {
+        "materialName": "Hydroxycitronellal",
+        "percentage": 50
+      },
+      {
+        "materialName": "Florol",
+        "percentage": 50
+      },
+      {
+        "materialName": "Iso E Super",
+        "percentage": 300
+      },
+      {
+        "materialName": "Patchouli EO Light",
+        "percentage": 15
+      },
+      {
+        "materialName": "Frankincense EO carterii",
+        "percentage": 10
+      },
+      {
+        "materialName": "Lavender True EO",
+        "percentage": 3
+      },
+      {
+        "materialName": "Ambrettolide",
+        "percentage": 5
+      },
+      {
+        "materialName": "Ambroxan",
+        "percentage": 10
+      },
+      {
+        "materialName": "Helional",
+        "percentage": 10
+      },
+      {
+        "materialName": "Immortelle Absolute",
+        "percentage": 2
+      },
+      {
+        "materialName": "Black Pepper EO",
+        "percentage": 20
+      },
+      {
+        "materialName": "Timberol",
+        "percentage": 10
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 150
+      },
+      {
+        "materialName": "Dipropylene Glycol DPG",
+        "percentage": 65
+      }
+    ]
+  },
+  {
+    "id": "fv2_4",
+    "name": "Animalis Replacer F336",
+    "type": "Base/Accord",
+    "family": "Animalic/Woody/Musky",
+    "notes": "Source: @perfume.archaeology / Aromaty. Civet-animalic replacement. Units: parts/1000.",
+    "createdAt": "2025-01-08",
+    "ingredients": [
+      {
+        "materialName": "Cedryl Acetate",
+        "percentage": 400
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 255.7
+      },
+      {
+        "materialName": "Benzyl Alcohol",
+        "percentage": 200
+      },
+      {
+        "materialName": "Patchouli EO Dark",
+        "percentage": 100
+      },
+      {
+        "materialName": "Castoreum Synth",
+        "percentage": 15
+      },
+      {
+        "materialName": "Cardamom EO",
+        "percentage": 10
+      },
+      {
+        "materialName": "Costus Root EO",
+        "percentage": 6
+      },
+      {
+        "materialName": "Aldehyde C-11 Undecenal",
+        "percentage": 1.5
+      },
+      {
+        "materialName": "Cistus EO",
+        "percentage": 1
+      },
+      {
+        "materialName": "Aldehyde C-12 MNA",
+        "percentage": 0.3
+      },
+      {
+        "materialName": "Phenyl Acetic Acid",
+        "percentage": 0.3
+      },
+      {
+        "materialName": "Birch Tar EO",
+        "percentage": 0.2
+      }
+    ]
+  },
+  {
+    "id": "fv2_5",
+    "name": "Dihydro Coumarex IFF",
+    "type": "Base/Accord",
+    "family": "Balsamic/Gourmand",
+    "notes": "Source: @perfume.archaeology. Dihydrocoumarin-based balsamic base. Units: parts/1000.",
+    "createdAt": "2025-01-13",
+    "ingredients": [
+      {
+        "materialName": "Octalactone Gamma",
+        "percentage": 55
+      },
+      {
+        "materialName": "Cinnamaldehyde",
+        "percentage": 14
+      },
+      {
+        "materialName": "Methyl Coumarin",
+        "percentage": 8
+      },
+      {
+        "materialName": "Dihydrocoumarin",
+        "percentage": 133
+      }
+    ]
+  },
+  {
+    "id": "fv2_6",
+    "name": "Ambrettex XNM IFF 1990s",
+    "type": "Base/Accord",
+    "family": "Musky",
+    "notes": "Source: @perfume.archaeology. Classic 1990s musk base. Units: parts/1000.",
+    "createdAt": "2025-01-14",
+    "ingredients": [
+      {
+        "materialName": "Dipropylene Glycol DPG",
+        "percentage": 296
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 175
+      },
+      {
+        "materialName": "Benzyl Salicylate",
+        "percentage": 10
+      },
+      {
+        "materialName": "Ambrettolide",
+        "percentage": 10
+      },
+      {
+        "materialName": "Tonalide",
+        "percentage": 236
+      },
+      {
+        "materialName": "Isopropyl Myristate IPM",
+        "percentage": 145
+      },
+      {
+        "materialName": "Nerolidol",
+        "percentage": 3
+      }
+    ]
+  },
+  {
+    "id": "fv2_7",
+    "name": "Freshly Cut Ginger Root",
+    "type": "Base/Accord",
+    "family": "Herbal/Citrus/Spicy",
+    "notes": "Source: @perfume.archaeology / patent. 0.5% in shampoo base. Units: parts/1000.",
+    "createdAt": "2025-01-19",
+    "ingredients": [
+      {
+        "materialName": "Citronellyl Acetate",
+        "percentage": 60
+      },
+      {
+        "materialName": "Geranyl Acetate",
+        "percentage": 20
+      },
+      {
+        "materialName": "Decanal",
+        "percentage": 3
+      },
+      {
+        "materialName": "Borneol",
+        "percentage": 10
+      },
+      {
+        "materialName": "Citral",
+        "percentage": 100
+      },
+      {
+        "materialName": "Elemi EO",
+        "percentage": 30
+      },
+      {
+        "materialName": "Ethyl Linalool",
+        "percentage": 40
+      },
+      {
+        "materialName": "Eucalyptus EO",
+        "percentage": 20
+      },
+      {
+        "materialName": "Geraniol",
+        "percentage": 120
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 300
+      },
+      {
+        "materialName": "Isoeugenol",
+        "percentage": 20
+      },
+      {
+        "materialName": "Linalool",
+        "percentage": 100
+      },
+      {
+        "materialName": "Litsea Cubeba EO",
+        "percentage": 15
+      },
+      {
+        "materialName": "Mefrosyl Acetate",
+        "percentage": 30
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 1
+      }
+    ]
+  },
+  {
+    "id": "fv2_8",
+    "name": "Patchouli Sublimator Base",
+    "type": "Base/Accord",
+    "family": "Earthy/Woody",
+    "notes": "Source: @perfume.archaeology / Master Formulas Collection. Deep patchouli base. Units: parts/1000.",
+    "createdAt": "2025-01-30",
+    "ingredients": [
+      {
+        "materialName": "Copaiba Balsam",
+        "percentage": 469
+      },
+      {
+        "materialName": "Cedarwood EO Texas",
+        "percentage": 100
+      },
+      {
+        "materialName": "Guaiac Wood EO",
+        "percentage": 50
+      },
+      {
+        "materialName": "Patchouli EO Dark",
+        "percentage": 350
+      },
+      {
+        "materialName": "Cade Rectified EO",
+        "percentage": 1
+      }
+    ]
+  },
+  {
+    "id": "fv2_9",
+    "name": "Cedar Pistache (Lozmar Brazil)",
+    "type": "Base/Accord",
+    "family": "Woody/Cedar/Oriental",
+    "notes": "Source: @perfume.archaeology / Lozmar Brazil. Total: 100g formula.",
+    "createdAt": "2025-04-06",
+    "ingredients": [
+      {
+        "materialName": "Cedarwood EO Atlas",
+        "percentage": 20.4
+      },
+      {
+        "materialName": "Cedarwood EO Texas",
+        "percentage": 2.6
+      },
+      {
+        "materialName": "Cedarwood EO Virginian",
+        "percentage": 10.3
+      },
+      {
+        "materialName": "Coumarin",
+        "percentage": 0.7
+      },
+      {
+        "materialName": "Beta Damascenone",
+        "percentage": 0.28
+      },
+      {
+        "materialName": "Decalactone Delta",
+        "percentage": 0.1
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 4.4
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 4.5
+      },
+      {
+        "materialName": "Hedione HC",
+        "percentage": 0.3
+      },
+      {
+        "materialName": "Iso E Super",
+        "percentage": 22.4
+      },
+      {
+        "materialName": "Ethyl Vanillin",
+        "percentage": 0.5
+      },
+      {
+        "materialName": "Alpha Terpineol",
+        "percentage": 0.08
+      },
+      {
+        "materialName": "Cyclamen Aldehyde",
+        "percentage": 0.2
+      }
+    ]
+  },
+  {
+    "id": "fv2_10",
+    "name": "Krishna Musk (Givaudan BBA)",
+    "type": "Base/Accord",
+    "family": "Musky/Floral/Woody",
+    "notes": "Source: @perfume.archaeology. Extremely musky Givaudan formula. Units: parts/1000.",
+    "createdAt": "2025-01-03",
+    "ingredients": [
+      {
+        "materialName": "Linalyl Acetate",
+        "percentage": 40
+      },
+      {
+        "materialName": "Geranyl Acetate",
+        "percentage": 0.6
+      },
+      {
+        "materialName": "Benzyl Alcohol",
+        "percentage": 7
+      },
+      {
+        "materialName": "Benzyl Benzoate",
+        "percentage": 177
+      },
+      {
+        "materialName": "Borneol",
+        "percentage": 1.4
+      },
+      {
+        "materialName": "Cinnamic Alcohol",
+        "percentage": 13
+      },
+      {
+        "materialName": "Citronellol",
+        "percentage": 10
+      },
+      {
+        "materialName": "Coumarin",
+        "percentage": 65
+      },
+      {
+        "materialName": "Limonene",
+        "percentage": 20
+      },
+      {
+        "materialName": "Galaxolide 50% IPM",
+        "percentage": 162.5
+      },
+      {
+        "materialName": "Geraniol",
+        "percentage": 7
+      },
+      {
+        "materialName": "Linalool",
+        "percentage": 30
+      },
+      {
+        "materialName": "Oakmoss Absolute",
+        "percentage": 2
+      },
+      {
+        "materialName": "Rose Oxide",
+        "percentage": 0.4
+      },
+      {
+        "materialName": "Patchouli EO Dark",
+        "percentage": 80
+      },
+      {
+        "materialName": "Alpha Terpineol",
+        "percentage": 120
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 22
+      },
+      {
+        "materialName": "Nerolidol",
+        "percentage": 3
+      },
+      {
+        "materialName": "Caryophyllene",
+        "percentage": 6
+      }
+    ]
+  },
+  {
+    "id": "fv2_11",
+    "name": "Plum Accord (Scentineer)",
+    "type": "Base/Accord",
+    "family": "Fruity/Floral/Woody",
+    "notes": "Source: @scentineer. Deep inky plum. Units: parts/1000.",
+    "createdAt": "2025-03-04",
+    "ingredients": [
+      {
+        "materialName": "Dipropylene Glycol DPG",
+        "percentage": 150
+      },
+      {
+        "materialName": "Hedione",
+        "percentage": 130
+      },
+      {
+        "materialName": "Beta Ionone",
+        "percentage": 80
+      },
+      {
+        "materialName": "Linalool",
+        "percentage": 80
+      },
+      {
+        "materialName": "Vertofix Coeur",
+        "percentage": 35
+      },
+      {
+        "materialName": "Ethylene Brassylate",
+        "percentage": 30
+      },
+      {
+        "materialName": "Clearwood",
+        "percentage": 30
+      },
+      {
+        "materialName": "Aldehyde C-14 Peach",
+        "percentage": 25
+      },
+      {
+        "materialName": "Benzaldehyde",
+        "percentage": 3
+      },
+      {
+        "materialName": "Iso Butyl Quinoline",
+        "percentage": 2
+      }
+    ]
+  },
+  {
+    "id": "fv2_12",
+    "name": "Blood Accord (Scentineer)",
+    "type": "Base/Accord",
+    "family": "Aquatic/Metallic/Musky",
+    "notes": "Source: @scentineer. Cold metallic blood effect. Units: parts/1000.",
+    "createdAt": "2025-03-18",
+    "ingredients": [
+      {
+        "materialName": "Dipropylene Glycol DPG",
+        "percentage": 480
+      },
+      {
+        "materialName": "Habanolide",
+        "percentage": 110
+      },
+      {
+        "materialName": "Helvetolide",
+        "percentage": 70
+      },
+      {
+        "materialName": "Ambroxan",
+        "percentage": 70
+      },
+      {
+        "materialName": "Benzyl Alcohol",
+        "percentage": 70
+      },
+      {
+        "materialName": "Clearwood",
+        "percentage": 60
+      },
+      {
+        "materialName": "Vertofix Coeur",
+        "percentage": 60
+      },
+      {
+        "materialName": "Rose Oxide",
+        "percentage": 20
+      },
+      {
+        "materialName": "Helional",
+        "percentage": 10
+      },
+      {
+        "materialName": "Calone 1951",
+        "percentage": 7
+      },
+      {
+        "materialName": "Aldehyde C-11 Undecenal",
+        "percentage": 3
+      },
+      {
+        "materialName": "Aldehyde C-12 MNA",
+        "percentage": 3
+      },
+      {
+        "materialName": "Aldehyde C-16 Strawberry",
+        "percentage": 3
+      },
+      {
+        "materialName": "Methyl Laitone",
+        "percentage": 2
+      },
+      {
+        "materialName": "Civettone",
+        "percentage": 1
+      }
+    ]
+  },
+  {
+    "id": "fv2_13",
+    "name": "Tiare Accord (Scentineer)",
+    "type": "Base/Accord",
+    "family": "Floral/Tropical",
+    "notes": "Source: @scentineer. Tropical Tiare-Monoi accord. Units: parts/1000.",
+    "createdAt": "2025-02-19",
+    "ingredients": [
+      {
+        "materialName": "Hedione",
+        "percentage": 230
+      },
+      {
+        "materialName": "Benzyl Salicylate",
+        "percentage": 190
+      },
+      {
+        "materialName": "Amyl Salicylate",
+        "percentage": 105
+      },
+      {
+        "materialName": "Benzyl Acetate",
+        "percentage": 100
+      },
+      {
+        "materialName": "Benzyl Benzoate",
+        "percentage": 62
+      },
+      {
+        "materialName": "Ethylene Brassylate",
+        "percentage": 60
+      },
+      {
+        "materialName": "Linalool",
+        "percentage": 44
+      },
+      {
+        "materialName": "Helvetolide",
+        "percentage": 35
+      },
+      {
+        "materialName": "Florol",
+        "percentage": 30
+      },
+      {
+        "materialName": "Hydroxycitronellal",
+        "percentage": 20
+      },
+      {
+        "materialName": "Ylang Ylang EO Extra",
+        "percentage": 18
+      },
+      {
+        "materialName": "Aldehyde C-18 Coconut",
+        "percentage": 18
+      },
+      {
+        "materialName": "Sandalore",
+        "percentage": 15
+      },
+      {
+        "materialName": "Decalactone Delta",
+        "percentage": 12
+      },
+      {
+        "materialName": "cis Jasmone",
+        "percentage": 12
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 10
+      },
+      {
+        "materialName": "Methyl Anthranilate",
+        "percentage": 6
+      },
+      {
+        "materialName": "Methyl Laitone",
+        "percentage": 3
+      },
+      {
+        "materialName": "Methyl Salicylate",
+        "percentage": 2
+      },
+      {
+        "materialName": "Indole",
+        "percentage": 1
+      }
+    ]
+  },
+  {
+    "id": "fv2_14",
+    "name": "Ink Accord (Scentineer)",
+    "type": "Base/Accord",
+    "family": "Woody/Earthy/Dark",
+    "notes": "Source: @scentineer. Black liquid ink — cold metal, dark patchouli, smoky woods. Units: parts/1000.",
+    "createdAt": "2025-03-18",
+    "ingredients": [
+      {
+        "materialName": "Dipropylene Glycol DPG",
+        "percentage": 560
+      },
+      {
+        "materialName": "Iso E Super",
+        "percentage": 120
+      },
+      {
+        "materialName": "Ambroxan",
+        "percentage": 80
+      },
+      {
+        "materialName": "Nagarmotha EO Cypriol",
+        "percentage": 10
+      },
+      {
+        "materialName": "Patchouli EO Dark",
+        "percentage": 40
+      },
+      {
+        "materialName": "Helional",
+        "percentage": 15
+      },
+      {
+        "materialName": "Benzyl Alcohol",
+        "percentage": 10
+      },
+      {
+        "materialName": "Cashmeran",
+        "percentage": 10
+      },
+      {
+        "materialName": "Aldehyde C-12 MNA",
+        "percentage": 8
+      },
+      {
+        "materialName": "Vanillin",
+        "percentage": 2
+      },
+      {
+        "materialName": "Castoreum Synth",
+        "percentage": 1
+      }
+    ]
+  }
+]
