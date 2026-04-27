@@ -6,6 +6,7 @@ export default function BibitParfum() {
   const [showModal, setShowModal] = useState(false);
   const [editingBibit, setEditingBibit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('ALL');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -16,13 +17,17 @@ export default function BibitParfum() {
   });
 
   const filteredBibits = useMemo(() => {
-    if (!searchTerm) return bibits;
-    return bibits.filter(b =>
+    let result = bibits;
+    if (filterCategory !== 'ALL') {
+      result = result.filter(b => b.category === filterCategory);
+    }
+    if (!searchTerm) return result;
+    return result.filter(b =>
       b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.odorProfile?.some(o => o.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [bibits, searchTerm]);
+  }, [bibits, searchTerm, filterCategory]);
 
   const resetForm = () => {
     setFormData({ name: '', brand: '', odorProfile: '', pricePerMl: '', recommendedDilution: '' });
@@ -102,6 +107,18 @@ export default function BibitParfum() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          {['ALL', 'Konsentrat', 'Library', 'Daftar Harga'].map(cat => (
+            <button
+              key={cat}
+              className={`btn btn-sm ${filterCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setFilterCategory(cat)}
+            >
+              {cat === 'ALL' ? 'Semua' : cat}
+            </button>
+          ))}
         </div>
 
         {filteredBibits.length === 0 ? (
