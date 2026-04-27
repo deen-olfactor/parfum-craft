@@ -94,7 +94,7 @@ export default function FormulasiBibit() {
         projectType: projectTypes.BIBIT_MIX,
         inspiration,
         materials: bibitSelections.map(b => ({
-          bibirId: b.bibitId,
+          bibitId: b.bibitId,
           percentage: b.percentage,
           isBibit: true,
         })),
@@ -120,7 +120,7 @@ export default function FormulasiBibit() {
 
       // Add bibit as base
       tweakMats.unshift({
-        bibirId: selectedBibit,
+        bibitId: selectedBibit,
         percentage:bibitPercentage,
         isBibit: true,
       });

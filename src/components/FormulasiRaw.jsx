@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function FormulasiRaw() {
-  const { getAllMaterials, saveProject, inspirations, projectTypes } = useApp();
+  const { getAllMaterials, saveProject, inspirations, projectTypes, exchangeRate } = useApp();
   const [projectName, setProjectName] = useState('');
   const [inspiration, setInspiration] = useState('');
   const [materials, setMaterials] = useState([]);
@@ -41,6 +41,19 @@ export default function FormulasiRaw() {
   const totalPercentage = useMemo(() =>
     materials.reduce((sum, m) => sum + (m.percentage || 0), 0),
   [materials]);
+
+  // Calculate total cost in USD and IDR
+  const totalCost = useMemo(() => {
+    let costUSD = 0;
+    materials.forEach(fm => {
+      const mat = allMaterials.find(m => m.id === fm.materialId);
+      if (mat && mat.pricePerUnit) {
+        const amount = (fm.percentage / 100) * (totalMl || 100);
+        costUSD += amount * mat.pricePerUnit;
+      }
+    });
+    return { usd: costUSD, idr: costUSD * exchangeRate };
+  }, [materials, allMaterials, totalMl, exchangeRate]);
 
   const handleSave = () => {
     if (!projectName.trim()) {
@@ -220,6 +233,19 @@ export default function FormulasiRaw() {
                   )}
                 </div>
               </div>
+              {materials.length > 0 && totalCost.usd > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                  <span className="text-secondary">Estimated Cost:</span>
+                  <div className="text-right">
+                    <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
+                      ${totalCost.usd.toFixed(2)} USD
+                    </div>
+                    <div className="font-mono text-sm text-secondary">
+                      ≈ {totalCost.idr.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })} IDR
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -57,6 +57,8 @@ export const PROJECT_TYPES = {
   BIBIT_TWEAK: { label: 'Tweak Bibit', description: 'Tweak bibit dengan raw materials' },
 };
 
+export const USD_TO_IDR = 15800; // Default exchange rate, can be updated
+
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [dbMaterials, setDbMaterials] = useState([]);
@@ -363,6 +365,7 @@ export function AppProvider({ children }) {
     processTypes: PROCESS_TYPES,
     materialTypes: MATERIAL_TYPES,
     usageNotes: USAGE_NOTES,
+    exchangeRate: USD_TO_IDR,
     saveUser,
     logout,
     getAllMaterials,
