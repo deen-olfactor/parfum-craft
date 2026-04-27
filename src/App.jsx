@@ -8,6 +8,7 @@ import FormulasiTincture from './components/FormulasiTincture';
 import FormulasiBibit from './components/FormulasiBibit';
 import Library from './components/Library';
 import BibitParfum from './components/BibitParfum';
+import Komponen from './components/Komponen';
 import HitungCOGS from './components/HitungCOGS';
 import Projects from './components/Projects';
 import './styles.css';
@@ -64,6 +65,8 @@ function AppContent() {
         return <Library />;
       case 'bibit':
         return <BibitParfum />;
+      case 'komponen':
+        return <Komponen />;
       case 'cogs':
         return <HitungCOGS />;
       case 'projects':

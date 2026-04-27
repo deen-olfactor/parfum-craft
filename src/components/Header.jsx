@@ -30,7 +30,8 @@ export default function Header({ activeMain, activeSub, onNavigate }) {
         <NavTab href="#formulasi" label="Formulasi" active={activeMain === 'formulasi'} onClick={() => handleNav('#formulasi')} />
         <NavTab href="#projects" label="Projects" active={activeMain === 'projects'} onClick={() => handleNav('#projects')} />
         <NavTab href="#library" label="Library" active={activeMain === 'library'} onClick={() => handleNav('#library')} />
-        <NavTab href="#bibit" label="Bibit Parfum" active={activeMain === 'bibit'} onClick={() => handleNav('#bibit')} />
+        <NavTab href="#bibit" label="Bibit" active={activeMain === 'bibit'} onClick={() => handleNav('#bibit')} />
+        <NavTab href="#komponen" label="Komponen" active={activeMain === 'komponen'} onClick={() => handleNav('#komponen')} />
         <NavTab href="#cogs" label="COGS" active={activeMain === 'cogs'} onClick={() => handleNav('#cogs')} />
       </nav>
 

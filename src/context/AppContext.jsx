@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import allMaterialsData from '../data/allMaterials.json';
 import seedFormulasData from '../data/seedFormulas.json';
 import { seedBibits } from '../data/seedBibits';
+import { seedComponents } from '../data/seedComponents';
 
 const AppContext = createContext();
 
@@ -13,6 +14,7 @@ const STORAGE_KEYS = {
   PROCESSED_MATERIALS: 'pf_processed_materials',
   BIBITS: 'pf_bibits',
   PROJECTS: 'pf_projects',
+  COMPONENTS: 'pf_components',
 };
 
 export const MATERIAL_TYPES = {
@@ -68,6 +70,7 @@ export function AppProvider({ children }) {
   const [processedMaterials, setProcessedMaterials] = useState([]);
   const [bibits, setBibits] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Initialize data on mount
@@ -84,6 +87,7 @@ export function AppProvider({ children }) {
       const savedProcessed = localStorage.getItem(STORAGE_KEYS.PROCESSED_MATERIALS);
       const savedBibits = localStorage.getItem(STORAGE_KEYS.BIBITS);
       const savedProjects = localStorage.getItem(STORAGE_KEYS.PROJECTS);
+      const savedComponents = localStorage.getItem(STORAGE_KEYS.COMPONENTS);
 
       // Load database materials
       setDbMaterials(allMaterialsData);
@@ -99,6 +103,8 @@ export function AppProvider({ children }) {
       if (savedBibits) setBibits(prev => [...seedBibits, ...JSON.parse(savedBibits)]);
       else setBibits(seedBibits);
       if (savedProjects) setProjects(JSON.parse(savedProjects));
+      if (savedComponents) setComponents(JSON.parse(savedComponents));
+      else setComponents(seedComponents);
     } catch (e) {
       console.error('Error loading data:', e);
     }
@@ -305,6 +311,27 @@ export function AppProvider({ children }) {
 
   const getProject = (id) => projects.find(p => p.id === id);
 
+  // Components (Bottles, Solvents, Packaging, Stickers)
+  const addComponent = (component) => {
+    const newComp = { ...component, id: 'comp' + Date.now(), createdAt: new Date().toISOString() };
+    const updated = [...components, newComp];
+    localStorage.setItem(STORAGE_KEYS.COMPONENTS, JSON.stringify(updated));
+    setComponents(updated);
+    return newComp;
+  };
+
+  const updateComponent = (id, updates) => {
+    const updated = components.map(c => c.id === id ? { ...c, ...updates } : c);
+    localStorage.setItem(STORAGE_KEYS.COMPONENTS, JSON.stringify(updated));
+    setComponents(updated);
+  };
+
+  const deleteComponent = (id) => {
+    const updated = components.filter(c => c.id !== id);
+    localStorage.setItem(STORAGE_KEYS.COMPONENTS, JSON.stringify(updated));
+    setComponents(updated);
+  };
+
   // COGS Calculation
   const calculateCOGS = useCallback((materials, totalMl = 100) => {
     let totalCost = 0;
@@ -359,6 +386,7 @@ export function AppProvider({ children }) {
     formulas,
     bibits,
     projects,
+    components,
     loading,
     inspirations: INSPIRATIONS,
     projectTypes: PROJECT_TYPES,
@@ -388,6 +416,9 @@ export function AppProvider({ children }) {
     deleteProject,
     getProject,
     calculateCOGS,
+    addComponent,
+    updateComponent,
+    deleteComponent,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
