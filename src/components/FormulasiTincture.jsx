@@ -181,7 +181,7 @@ export default function FormulasiTincture() {
                     </div>
                   </div>
                   <div className="font-mono text-sm">
-                    ${(material.pricePerUnit || 0).toFixed(2)}/{material.priceCurrency === 'IDR' ? 'IDR' : 'g'}
+                    {(material.pricePerUnit || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/g
                   </div>
                 </div>
               ))}

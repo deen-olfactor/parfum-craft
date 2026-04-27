@@ -1,29 +1,54 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 
+const FRAGRANCE_TYPES = [
+  { value: 'EDT', label: 'EDT (Eau de Toilette) - 5-15% concentrate' },
+  { value: 'EDP', label: 'EDP (Eau de Parfum) - 15-20% concentrate' },
+  { value: 'EDP Forte', label: 'EDP Forte (20-30% concentrate)' },
+  { value: 'Extrait', label: 'Extrait / Parfum - 30-40% concentrate' },
+  { value: 'Perfume Oil', label: 'Perfume Oil - 100% concentrate' },
+];
+
+const SOLVENT_TYPES = [
+  { value: 'Ethanol 96%', label: 'Ethanol 96% (Perfumer\'s Alcohol)' },
+  { value: 'DPG', label: 'Dipropylene Glycol (DPG)' },
+  { value: 'IPM', label: 'Isopropyl Myristate (IPM)' },
+  { value: 'Oil', label: 'Fractionated Coconut Oil / Jojoba' },
+  { value: 'Alcohol + DPG', label: 'Mix Alcohol + DPG' },
+];
+
 export default function FormulasiRaw() {
-  const { getAllMaterials, saveProject, inspirations, projectTypes, exchangeRate } = useApp();
+  const { getAllMaterials, saveProject, projectTypes } = useApp();
   const [projectName, setProjectName] = useState('');
-  const [inspiration, setInspiration] = useState('');
+  const [fragranceType, setFragranceType] = useState('EDP');
+  const [solventType, setSolventType] = useState('Ethanol 96%');
   const [materials, setMaterials] = useState([]);
-  const [totalMl, setTotalMl] = useState(100);
   const [notes, setNotes] = useState('');
   const [showMaterialPicker, setShowMaterialPicker] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Pyramid notes
+  const [pyramidNote, setPyramidNote] = useState({ name: '', usage: 'Top', percentage: 0 });
+
   const allMaterials = getAllMaterials();
 
   const filteredMaterials = useMemo(() => {
-    if (!searchTerm) return allMaterials.slice(0, 100);
+    if (!searchTerm) return allMaterials.slice(0, 50);
     return allMaterials.filter(m =>
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.odor?.some(o => o.toLowerCase().includes(searchTerm.toLowerCase()))
-    ).slice(0, 100);
+    ).slice(0, 50);
   }, [allMaterials, searchTerm]);
 
   const addMaterial = (material) => {
-    if (materials.find(m => m.materialId === material.id)) return;
-    setMaterials([...materials, { materialId: material.id, percentage: 0 }]);
+    if (material.usage === 'Top' || material.usage === 'top') {
+      material.usage = 'Top';
+    } else if (material.usage === 'Middle' || material.usage === 'middle') {
+      material.usage = 'Middle';
+    } else {
+      material.usage = 'Base';
+    }
+    setMaterials([...materials, { materialId: material.id, percentage: 0, usage: material.usage || 'Base' }]);
   };
 
   const removeMaterial = (materialId) => {
@@ -42,18 +67,43 @@ export default function FormulasiRaw() {
     materials.reduce((sum, m) => sum + (m.percentage || 0), 0),
   [materials]);
 
-  // Calculate total cost in USD and IDR
+  // Calculate cost in IDR
   const totalCost = useMemo(() => {
-    let costUSD = 0;
+    let costIDR = 0;
     materials.forEach(fm => {
       const mat = allMaterials.find(m => m.id === fm.materialId);
       if (mat && mat.pricePerUnit) {
-        const amount = (fm.percentage / 100) * (totalMl || 100);
-        costUSD += amount * mat.pricePerUnit;
+        costIDR += (fm.percentage / 100) * mat.pricePerUnit;
       }
     });
-    return { usd: costUSD, idr: costUSD * exchangeRate };
-  }, [materials, allMaterials, totalMl, exchangeRate]);
+    return costIDR;
+  }, [materials, allMaterials]);
+
+  // Group materials by pyramid level
+  const groupedMaterials = useMemo(() => {
+    const groups = { Top: [], Middle: [], Base: [] };
+    materials.forEach(fm => {
+      const mat = allMaterials.find(m => m.id === fm.materialId);
+      if (mat) {
+        const usage = fm.usage || mat.usage || 'Base';
+        if (groups[usage]) {
+          groups[usage].push({ ...fm, mat });
+        } else {
+          groups['Base'].push({ ...fm, mat });
+        }
+      }
+    });
+    return groups;
+  }, [materials, allMaterials]);
+
+  // Calculate pyramid totals
+  const pyramidTotals = useMemo(() => {
+    return {
+      Top: materials.filter(m => (m.usage || 'Base') === 'Top').reduce((s, m) => s + (m.percentage || 0), 0),
+      Middle: materials.filter(m => (m.usage || 'Base') === 'Middle').reduce((s, m) => s + (m.percentage || 0), 0),
+      Base: materials.filter(m => (m.usage || 'Base') === 'Base').reduce((s, m) => s + (m.percentage || 0), 0),
+    };
+  }, [materials]);
 
   const handleSave = () => {
     if (!projectName.trim()) {
@@ -73,9 +123,10 @@ export default function FormulasiRaw() {
       name: projectName,
       type: 'RAW_TO_PERFUME',
       projectType: projectTypes.RAW_TO_PERFUME,
-      inspiration,
+      fragranceType,
+      solventType,
       materials,
-      totalMl: parseFloat(totalMl) || 100,
+      pyramid: pyramidTotals,
       notes,
       createdAt: new Date().toISOString(),
     };
@@ -85,14 +136,15 @@ export default function FormulasiRaw() {
 
     // Reset form
     setProjectName('');
-    setInspiration('');
+    setFragranceType('EDP');
+    setSolventType('Ethanol 96%');
     setMaterials([]);
     setNotes('');
   };
 
   const getMaterialInfo = (materialId) => {
     const mat = allMaterials.find(m => m.id === materialId);
-    if (!mat) return { name: 'Unknown', type: 'Unknown', usage: 'Base' };
+    if (!mat) return { name: 'Unknown', type: 'Unknown', usage: 'Base', pricePerUnit: 0 };
     return {
       name: mat.name,
       type: mat.type,
@@ -101,49 +153,102 @@ export default function FormulasiRaw() {
     };
   };
 
+  const renderMaterialGroup = (usage, label, color) => {
+    const group = groupedMaterials[usage];
+    if (group.length === 0) return null;
+
+    return (
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <span style={{
+            width: '12px', height: '12px', borderRadius: '50%',
+            background: color
+          }}></span>
+          <span style={{ fontWeight: 600 }}>{label}</span>
+          <span className="badge" style={{ background: color, color: 'white', marginLeft: '8px' }}>
+            {pyramidTotals[usage].toFixed(1)}%
+          </span>
+        </div>
+        {group.map(({ materialId, percentage }) => {
+          const info = getMaterialInfo(materialId);
+          return (
+            <div key={materialId} className="formula-material-row">
+              <div className="material-info">
+                <div className="material-name">{info.name}</div>
+                <div className="material-meta">
+                  <span className={`badge badge-${info.type?.toLowerCase()?.slice(0,2)}`}>{info.type}</span>
+                </div>
+              </div>
+              <div className="number-input">
+                <button onClick={() => updatePercentage(materialId, (percentage || 0) - 0.5)}>-</button>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={percentage || 0}
+                  onChange={(e) => updatePercentage(materialId, parseFloat(e.target.value) || 0)}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                />
+                <button onClick={() => updatePercentage(materialId, (percentage || 0) + 0.5)}>+</button>
+                <span>%</span>
+              </div>
+              <button
+                className="btn btn-secondary btn-icon"
+                onClick={() => removeMaterial(materialId)}
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Formulasi Raw Material</h1>
-        <p className="page-subtitle">Buat parfum直接从 raw materials</p>
+        <h1 className="page-title">Formulasi Parfum</h1>
+        <p className="page-subtitle">Buat parfum dari raw materials dengan kreatifitas pribadimu</p>
       </div>
 
       <div className="card">
         <div className="form-group">
-          <label className="form-label">Nama Project *</label>
+          <label className="form-label">Nama Parfum *</label>
           <input
             type="text"
             className="form-input"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            placeholder="Contoh: Oud Noir Special Edition"
+            placeholder="Contoh: Signature No.1"
           />
         </div>
 
         <div className="grid-2">
           <div className="form-group">
-            <label className="form-label">Inspirasi / Reference</label>
+            <label className="form-label">Tipe Parfum</label>
             <select
               className="form-select"
-              value={inspiration}
-              onChange={(e) => setInspiration(e.target.value)}
+              value={fragranceType}
+              onChange={(e) => setFragranceType(e.target.value)}
             >
-              <option value="">Pilih parfum (optional)</option>
-              {inspirations.map(ins => (
-                <option key={ins} value={ins}>{ins}</option>
+              {FRAGRANCE_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Total Volume (ml)</label>
-            <input
-              type="number"
-              className="form-input"
-              value={totalMl}
-              onChange={(e) => setTotalMl(e.target.value)}
-              min="1"
-              style={{ width: '120px' }}
-            />
+            <label className="form-label">Pelarut / Carrier</label>
+            <select
+              className="form-select"
+              value={solventType}
+              onChange={(e) => setSolventType(e.target.value)}
+            >
+              {SOLVENT_TYPES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -176,48 +281,11 @@ export default function FormulasiRaw() {
           </div>
         ) : (
           <div>
-            {materials.map((fm) => {
-              const info = getMaterialInfo(fm.materialId);
-              return (
-                <div key={fm.materialId} className="formula-material-row">
-                  <div className="material-info">
-                    <div className="material-name">
-                      <span className={`type-dot type-dot-${info.type?.toLowerCase()?.slice(0,2)}`}></span>
-                      {info.name}
-                    </div>
-                    <div className="material-meta">
-                      <span className={`badge badge-${info.type?.toLowerCase()?.slice(0,2)}`}>{info.type}</span>
-                      <span className={`badge badge-${info.usage?.toLowerCase()}`}>{info.usage}</span>
-                    </div>
-                  </div>
-                  <div className="number-input">
-                    <button onClick={() => updatePercentage(fm.materialId, (fm.percentage || 0) - 0.5)}>-</button>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={fm.percentage || 0}
-                      onChange={(e) => updatePercentage(fm.materialId, parseFloat(e.target.value) || 0)}
-                      min="0"
-                      max="100"
-                      step="0.1"
-                    />
-                    <button onClick={() => updatePercentage(fm.materialId, (fm.percentage || 0) + 0.5)}>+</button>
-                    <span>%</span>
-                  </div>
-                  <div className="font-mono text-sm">
-                    {((totalMl * (fm.percentage || 0)) / 100).toFixed(2)} ml
-                  </div>
-                  <button
-                    className="btn btn-secondary btn-icon"
-                    onClick={() => removeMaterial(fm.materialId)}
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
+            {renderMaterialGroup('Top', 'Top Note', '#007AFF')}
+            {renderMaterialGroup('Middle', 'Middle Note', '#34C759')}
+            {renderMaterialGroup('Base', 'Base Note', '#FF9500')}
 
-            <div className="cost-breakdown" style={{ marginTop: '16px' }}>
+            <div className="cost-breakdown" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Total:</span>
                 <div className="flex items-center gap-2">
@@ -233,16 +301,11 @@ export default function FormulasiRaw() {
                   )}
                 </div>
               </div>
-              {materials.length > 0 && totalCost.usd > 0 && (
+              {materials.length > 0 && totalCost > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                  <span className="text-secondary">Estimated Cost:</span>
-                  <div className="text-right">
-                    <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
-                      ${totalCost.usd.toFixed(2)} USD
-                    </div>
-                    <div className="font-mono text-sm text-secondary">
-                      ≈ {totalCost.idr.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })} IDR
-                    </div>
+                  <span className="text-secondary">Estimated Cost (100ml):</span>
+                  <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
+                    {totalCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                   </div>
                 </div>
               )}
@@ -252,7 +315,7 @@ export default function FormulasiRaw() {
 
         {materials.length > 0 && Math.abs(totalPercentage - 100) <= 0.1 && (
           <button className="btn btn-primary" style={{ marginTop: '24px' }} onClick={handleSave}>
-            Simpan Project
+            Simpan Formula
           </button>
         )}
       </div>
@@ -281,14 +344,15 @@ export default function FormulasiRaw() {
               {filteredMaterials.map((material) => (
                 <div
                   key={material.id}
-                  className="material-item"
+                  className="list-item"
                   onClick={() => { addMaterial(material); setShowMaterialPicker(false); setSearchTerm(''); }}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <div className="material-info">
-                    <div className="material-name">{material.name}</div>
-                    <div className="material-meta">
+                  <div className="list-item-content">
+                    <div className="list-item-title">{material.name}</div>
+                    <div className="list-item-subtitle">
                       <span className={`badge badge-${material.type?.toLowerCase()?.slice(0,2)}`}>{material.type}</span>
-                      {' '}{material.odor?.slice(0, 3).join(', ')}
+                      {' '}{material.usage || 'Base'} note • {material.pricePerUnit?.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/g
                     </div>
                   </div>
                 </div>
