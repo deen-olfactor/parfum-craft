@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Auth from './components/Auth';
 import Header from './components/Header';
@@ -16,11 +16,21 @@ function AppContent() {
   const { user, loading } = useApp();
   const [route, setRoute] = useState({ main: 'formulasi', sub: null });
 
-  useEffect(() => {
+  const parseHash = useCallback(() => {
     const hash = window.location.hash.replace('#', '') || 'formulasi';
     const [mainRoute, subRoute] = hash.split('-');
-    setRoute({ main: mainRoute, sub: subRoute });
+    return { main: mainRoute, sub: subRoute };
   }, []);
+
+  useEffect(() => {
+    // Initial parse
+    setRoute(parseHash());
+
+    // Handle browser back/forward
+    const handleHashChange = () => setRoute(parseHash());
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [parseHash]);
 
   const navigate = (main, sub = null) => {
     const hash = sub ? `${main}-${sub}` : main;
