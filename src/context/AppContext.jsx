@@ -100,8 +100,16 @@ export function AppProvider({ children }) {
       if (savedStocks) setStocks(JSON.parse(savedStocks));
       if (savedFormulas) setFormulas(prev => [...seedFormulasData, ...JSON.parse(savedFormulas)]);
       if (savedProcessed) setProcessedMaterials(JSON.parse(savedProcessed));
-      if (savedBibits) setBibits(prev => [...seedBibits, ...JSON.parse(savedBibits)]);
-      else setBibits(seedBibits);
+      if (savedBibits) {
+        try {
+          const parsed = JSON.parse(savedBibits) || [];
+          const uniqueParsed = parsed.filter((item, idx) => idx === parsed.findIndex(p => p.id === item.id));
+          const merged = [...seedBibits.filter(s => !uniqueParsed.some(p => p.id === s.id)), ...uniqueParsed];
+          setBibits(merged);
+        } catch (e) {
+          setBibits(seedBibits);
+        }
+      } else setBibits(seedBibits);
       if (savedProjects) setProjects(JSON.parse(savedProjects));
       if (savedComponents) setComponents(JSON.parse(savedComponents));
       else setComponents(seedComponents);
