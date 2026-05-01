@@ -15,10 +15,11 @@ const CONCENTRATION_TYPES = [
   { value: 15, label: 'EDP (15-20%)' },
   { value: 20, label: 'EDP Forte (20-25%)' },
   { value: 30, label: 'Extrait (30-40%)' },
+  { value: 'custom', label: 'Custom...' },
 ];
 
 export default function HitungCOGS() {
-  const { projects, bibits, components, calculateCOGS, saveProject } = useApp();
+  const { projects, formulas, bibits, components, calculateCOGS, saveProject } = useApp();
 
   // Project selection
   const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -30,7 +31,8 @@ export default function HitungCOGS() {
   const [variantName, setVariantName] = useState('');
   const [batchSize, setBatchSize] = useState(100);
   const [bottleSize, setBottleSize] = useState(50);
-  const [concentration, setConcentration] = useState(15);
+  const [concentration, setConcentration] = useState(15); // can be number or 'custom'
+  const [customConcentration, setCustomConcentration] = useState(15);
 
   // Component selections
   const [selectedBottleId, setSelectedBottleId] = useState('');
@@ -41,9 +43,30 @@ export default function HitungCOGS() {
   // Bibit search
   const [bibitSearch, setBibitSearch] = useState('');
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
-  const rawToPerfumeProjects = projects.filter(p => p.type === 'RAW_TO_PERFUME');
-  const bibitMixProjects = projects.filter(p => p.type === 'BIBIT_MIX');
+  // Map seed formulas into project-like objects so they can be selected
+  const mappedFormulas = useMemo(() => {
+    if (!formulas || !Array.isArray(formulas)) return [];
+    return formulas
+      .filter(f => Array.isArray(f.ingredients) && f.ingredients.length > 0)
+      .map(f => ({
+        id: f.id,
+        name: f.name,
+        type: 'RAW_TO_PERFUME',
+        materials: f.ingredients.map(i => ({ materialName: i.materialName || i.name, percentage: i.percentage }))
+      }));
+  }, [formulas]);
+
+  const combinedRawProjects = useMemo(() => {
+    const fromProjects = projects.filter(p => p.type === 'RAW_TO_PERFUME');
+    return [...fromProjects, ...mappedFormulas];
+  }, [projects, mappedFormulas]);
+
+  const bibitMixProjects = useMemo(() => projects.filter(p => p.type === 'BIBIT_MIX'), [projects]);
+
+  const selectedProject = useMemo(() => {
+    return [...projects, ...mappedFormulas].find(p => p.id === selectedProjectId);
+  }, [projects, mappedFormulas, selectedProjectId]);
+
   const selectedBibit = bibits.find(b => b.id === selectedBibitId);
 
   // Get components by type
@@ -60,35 +83,48 @@ export default function HitungCOGS() {
     ).slice(0, 20);
   }, [bibits, bibitSearch]);
 
+  // Determine effective concentration number
+  const effectiveConcentration = useMemo(() => {
+    if (concentration === 'custom') return parseFloat(customConcentration) || 0;
+    return parseFloat(concentration) || 0;
+  }, [concentration, customConcentration]);
+
   // Calculate amounts
-  const concentratePerBottle = (bottleSize * concentration) / 100;
+  const concentratePerBottle = (bottleSize * effectiveConcentration) / 100;
   const totalConcentrate = concentratePerBottle * batchSize;
   const totalVolume = batchSize * bottleSize;
   const solventPerBottle = bottleSize - concentratePerBottle;
   const totalSolvent = solventPerBottle * batchSize;
 
-  // Concentrate cost
-  const rawMaterialCost = useMemo(() => {
-    if (useBibitMix || !selectedProject || selectedProject.type !== 'RAW_TO_PERFUME') return 0;
-    const result = calculateCOGS(selectedProject.materials, 100);
-    return (result.totalCost / 100) * totalConcentrate;
+  // Concentrate cost — calculate directly for the totalConcentrate (ml)
+  const rawMaterialResult = useMemo(() => {
+    if (useBibitMix || !selectedProject || selectedProject.type !== 'RAW_TO_PERFUME') return { totalCost: 0, breakdown: [] };
+    if (!selectedProject.materials || selectedProject.materials.length === 0) return { totalCost: 0, breakdown: [] };
+    // calculateCOGS expects materials with materialId or materialName and a total ml argument
+    const result = calculateCOGS(selectedProject.materials, totalConcentrate || 100);
+    return result || { totalCost: 0, breakdown: [] };
   }, [useBibitMix, selectedProject, totalConcentrate, calculateCOGS]);
+
+  const rawMaterialCost = rawMaterialResult.totalCost || 0;
+  const rawMaterialBreakdown = rawMaterialResult.breakdown || [];
 
   // Bibit cost
   const bibitCost = useMemo(() => {
     if (!useBibitMix) return 0;
     if (selectedBibit) {
-      return totalConcentrate * selectedBibit.pricePerMl;
+      return totalConcentrate * (selectedBibit.pricePerMl || 0);
     }
     if (selectedProject && selectedProject.type === 'BIBIT_MIX') {
-      let total = 0;
+      // Sum cost per ml of the mix definition, then multiply by totalConcentrate
+      let totalPer100mlCost = 0;
       selectedProject.materials?.forEach(m => {
         if (m.isBibit && m.bibitId) {
           const b = bibits.find(x => x.id === m.bibitId);
-          if (b) total += (m.percentage / 100) * b.pricePerMl;
+          if (b) totalPer100mlCost += (m.percentage / 100) * (b.pricePerMl || 0) * 100;
         }
       });
-      return (total / 100) * totalConcentrate;
+      // totalPer100mlCost is cost for 100ml, scale to totalConcentrate
+      return (totalPer100mlCost / 100) * totalConcentrate;
     }
     return 0;
   }, [useBibitMix, selectedBibit, selectedProject, totalConcentrate, bibits]);
@@ -99,15 +135,16 @@ export default function HitungCOGS() {
   const packagingComp = packagings.find(c => c.id === selectedPackagingId);
   const stickerComp = stickers.find(c => c.id === selectedStickerId);
 
-  const solventCost = solventComp ? (totalSolvent * (solventComp.pricePerUnit / 1000)) : 0;
-  const bottleCost = bottleComp ? (batchSize * bottleComp.pricePerUnit) : 0;
-  const packagingCost = packagingComp ? (batchSize * packagingComp.pricePerUnit) : 0;
-  const stickerCost = stickerComp ? (batchSize * stickerComp.pricePerUnit) : 0;
+  // Assume solvent.pricePerUnit is per liter; convert ml -> liter
+  const solventCost = solventComp ? (totalSolvent / 1000) * (solventComp.pricePerUnit || 0) : 0;
+  const bottleCost = bottleComp ? (batchSize * (bottleComp.pricePerUnit || 0)) : 0;
+  const packagingCost = packagingComp ? (batchSize * (packagingComp.pricePerUnit || 0)) : 0;
+  const stickerCost = stickerComp ? (batchSize * (stickerComp.pricePerUnit || 0)) : 0;
 
   // Total COGS
   const totalCOGS = rawMaterialCost + bibitCost + solventCost + bottleCost + packagingCost + stickerCost;
-  const costPerBottle = totalCOGS / batchSize;
-  const costPerMl = totalCOGS / totalVolume;
+  const costPerBottle = batchSize > 0 ? totalCOGS / batchSize : 0;
+  const costPerMl = totalVolume > 0 ? totalCOGS / totalVolume : 0;
 
   const handleReset = () => {
     setSelectedProjectId('');
@@ -118,6 +155,7 @@ export default function HitungCOGS() {
     setBatchSize(100);
     setBottleSize(50);
     setConcentration(15);
+    setCustomConcentration(15);
     setSelectedBottleId('');
     setSelectedSolventId('');
     setSelectedPackagingId('');
@@ -149,7 +187,7 @@ export default function HitungCOGS() {
       useBibitMix,
       batchSize,
       bottleSize,
-      concentration,
+      concentration: effectiveConcentration,
       bottleId: selectedBottleId,
       solventId: selectedSolventId,
       packagingId: selectedPackagingId,
@@ -219,14 +257,18 @@ export default function HitungCOGS() {
               className="form-select"
               value={selectedProjectId}
               onChange={(e) => {
-                setSelectedProjectId(e.target.value);
-                setUseBibitMix(false);
+                const val = e.target.value;
+                setSelectedProjectId(val);
                 setSelectedBibitId('');
+                // detect if selected project is a bibit mix
+                const proj = [...projects, ...mappedFormulas].find(p => p.id === val);
+                const isBibitMix = proj && proj.type === 'BIBIT_MIX';
+                setUseBibitMix(!!isBibitMix);
               }}
             >
               <option value="">Pilih formula...</option>
               <optgroup label="Raw Material Formula">
-                {rawToPerfumeProjects.map(p => (
+                {combinedRawProjects.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </optgroup>
@@ -268,7 +310,7 @@ export default function HitungCOGS() {
                 onChange={(e) => setBibitSearch(e.target.value)}
               />
             </div>
-            {bibitSearch && filteredBibits.length > 0 && (
+            {filteredBibits.length > 0 && (
               <select
                 className="form-select"
                 value={selectedBibitId}
@@ -326,12 +368,24 @@ export default function HitungCOGS() {
             <select
               className="form-select"
               value={concentration}
-              onChange={(e) => setConcentration(parseInt(e.target.value))}
+              onChange={(e) => setConcentration(e.target.value)}
             >
               {CONCENTRATION_TYPES.map(c => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
+            {concentration === 'custom' && (
+              <input
+                type="number"
+                className="form-input" 
+                style={{ marginTop: '8px' }}
+                value={customConcentration}
+                onChange={(e) => setCustomConcentration(e.target.value)}
+                min="0"
+                max="100"
+                step="0.1"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -401,72 +455,83 @@ export default function HitungCOGS() {
             </select>
           </div>
         </div>
-      </div>
 
-      <div className="card">
-        <h3 className="card-title" style={{ marginBottom: '16px' }}>Rincian Biaya</h3>
+        <div className="card">
+          <h3 className="card-title" style={{ marginBottom: '16px' }}>Rincian Biaya</h3>
 
-        <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
-          <div className="grid-2" style={{ gap: '12px' }}>
-            <div>
-              <div className="text-sm text-secondary">Total Volume</div>
-              <div className="font-mono" style={{ fontSize: '18px' }}>{totalVolume.toLocaleString()} ml</div>
-            </div>
-            <div>
-              <div className="text-sm text-secondary">Concentrate per Bottle</div>
-              <div className="font-mono" style={{ fontSize: '18px' }}>{concentratePerBottle.toFixed(2)} ml</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="cost-breakdown">
-          <div className="cost-row">
-            <span>{useBibitMix ? (selectedBibit ? 'Bibit Tunggal' : 'Bibit Mix') : 'Raw Materials'}</span>
-            <span className="font-mono">
-              {(useBibitMix ? bibitCost : rawMaterialCost).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div className="cost-row">
-            <span>Pelarut ({totalSolvent.toFixed(0)} ml)</span>
-            <span className="font-mono">{solventCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
-          </div>
-          <div className="cost-row">
-            <span>Botol ({batchSize} pcs)</span>
-            <span className="font-mono">{bottleCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
-          </div>
-          <div className="cost-row">
-            <span>Packaging ({batchSize} pcs)</span>
-            <span className="font-mono">{packagingCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
-          </div>
-          <div className="cost-row">
-            <span>Sticker ({batchSize} pcs)</span>
-            <span className="font-mono">{stickerCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
-          </div>
-          <div style={{ borderTop: '2px solid var(--border-color)', marginTop: '12px', paddingTop: '12px' }}>
-            <div className="cost-row" style={{ fontWeight: 700, fontSize: '18px' }}>
-              <span>TOTAL COGS</span>
-              <span className="font-mono">{totalCOGS.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+          <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+            <div className="grid-2" style={{ gap: '12px' }}>
+              <div>
+                <div className="text-sm text-secondary">Total Volume</div>
+                <div className="font-mono" style={{ fontSize: '18px' }}>{totalVolume.toLocaleString()} ml</div>
+              </div>
+              <div>
+                <div className="text-sm text-secondary">Concentrate per Bottle</div>
+                <div className="font-mono" style={{ fontSize: '18px' }}>{concentratePerBottle.toFixed(2)} ml</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ background: 'var(--color-primary)', color: 'white', padding: '16px', borderRadius: '8px', marginTop: '16px', textAlign: 'center' }}>
-          <div className="text-sm" style={{ opacity: 0.9 }}>Cost per Bottle</div>
-          <div className="font-mono" style={{ fontSize: '32px', fontWeight: 700 }}>
-            {costPerBottle.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+          <div className="cost-breakdown">
+            {rawMaterialBreakdown && rawMaterialBreakdown.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div className="text-sm text-secondary">Detail bahan (Concentrate)</div>
+                {rawMaterialBreakdown.map(b => (
+                  <div key={b.materialId} className="cost-row">
+                    <span>{b.name} — {b.percentage}% ({b.amount.toFixed(2)} ml)</span>
+                    <span className="font-mono">{b.cost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="cost-row">
+              <span>{useBibitMix ? (selectedBibit ? 'Bibit Tunggal' : 'Bibit Mix') : 'Raw Materials (Concentrate)'}</span>
+              <span className="font-mono">
+                {(useBibitMix ? bibitCost : rawMaterialCost).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="cost-row">
+              <span>Pelarut ({totalSolvent.toFixed(0)} ml)</span>
+              <span className="font-mono">{solventCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+            </div>
+            <div className="cost-row">
+              <span>Botol ({batchSize} pcs)</span>
+              <span className="font-mono">{bottleCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+            </div>
+            <div className="cost-row">
+              <span>Packaging ({batchSize} pcs)</span>
+              <span className="font-mono">{packagingCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+            </div>
+            <div className="cost-row">
+              <span>Sticker ({batchSize} pcs)</span>
+              <span className="font-mono">{stickerCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+            </div>
+            <div style={{ borderTop: '2px solid var(--border-color)', marginTop: '12px', paddingTop: '12px' }}>
+              <div className="cost-row" style={{ fontWeight: 700, fontSize: '18px' }}>
+                <span>TOTAL COGS</span>
+                <span className="font-mono">{totalCOGS.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: '14px', opacity: 0.9 }}>
-            = {costPerMl.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-          <button className="btn btn-secondary" onClick={handleReset}>
-            Reset
-          </button>
-          <button className="btn btn-primary" onClick={handleSaveToProjects}>
-            Simpan ke Projects
-          </button>
+          <div style={{ background: 'var(--color-primary)', color: 'white', padding: '16px', borderRadius: '8px', marginTop: '16px', textAlign: 'center' }}>
+            <div className="text-sm" style={{ opacity: 0.9 }}>Cost per Bottle</div>
+            <div className="font-mono" style={{ fontSize: '32px', fontWeight: 700 }}>
+              {costPerBottle.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+            </div>
+            <div style={{ fontSize: '14px', opacity: 0.9 }}>
+              = {costPerMl.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            <button className="btn btn-secondary" onClick={handleReset}>
+              Reset
+            </button>
+            <button className="btn btn-primary" onClick={handleSaveToProjects}>
+              Simpan ke Projects
+            </button>
+          </div>
         </div>
       </div>
     </div>

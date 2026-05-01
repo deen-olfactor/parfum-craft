@@ -100,8 +100,16 @@ export function AppProvider({ children }) {
       if (savedStocks) setStocks(JSON.parse(savedStocks));
       if (savedFormulas) setFormulas(prev => [...seedFormulasData, ...JSON.parse(savedFormulas)]);
       if (savedProcessed) setProcessedMaterials(JSON.parse(savedProcessed));
-      if (savedBibits) setBibits(prev => [...seedBibits, ...JSON.parse(savedBibits)]);
-      else setBibits(seedBibits);
+      if (savedBibits) {
+        try {
+          const parsed = JSON.parse(savedBibits) || [];
+          const uniqueParsed = parsed.filter((item, idx) => idx === parsed.findIndex(p => p.id === item.id));
+          const merged = [...seedBibits.filter(s => !uniqueParsed.some(p => p.id === s.id)), ...uniqueParsed];
+          setBibits(merged);
+        } catch (e) {
+          setBibits(seedBibits);
+        }
+      } else setBibits(seedBibits);
       if (savedProjects) setProjects(JSON.parse(savedProjects));
       if (savedComponents) setComponents(JSON.parse(savedComponents));
       else setComponents(seedComponents);
@@ -136,7 +144,9 @@ export function AppProvider({ children }) {
   }, [getAllMaterials]);
 
   const getMaterialByName = useCallback((name) => {
-    return getAllMaterials().find(m => m.name.toLowerCase() === name.toLowerCase());
+    if (!name) return undefined;
+    const target = String(name).toLowerCase();
+    return getAllMaterials().find(m => (m?.name || '').toLowerCase() === target);
   }, [getAllMaterials]);
 
   // User Materials CRUD
@@ -374,7 +384,7 @@ export function AppProvider({ children }) {
       }
     });
 
-    return { totalCost, breakdown, costPerMl: totalCost / totalMl };
+    return { totalCost, breakdown, costPerMl: totalMl ? totalCost / totalMl : 0 };
   }, [getMaterialById, getMaterialByName]);
 
   const value = {
