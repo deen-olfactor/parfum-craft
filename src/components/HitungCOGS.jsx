@@ -97,13 +97,16 @@ export default function HitungCOGS() {
   const totalSolvent = solventPerBottle * batchSize;
 
   // Concentrate cost — calculate directly for the totalConcentrate (ml)
-  const rawMaterialCost = useMemo(() => {
-    if (useBibitMix || !selectedProject || selectedProject.type !== 'RAW_TO_PERFUME') return 0;
-    if (!selectedProject.materials || selectedProject.materials.length === 0) return 0;
+  const rawMaterialResult = useMemo(() => {
+    if (useBibitMix || !selectedProject || selectedProject.type !== 'RAW_TO_PERFUME') return { totalCost: 0, breakdown: [] };
+    if (!selectedProject.materials || selectedProject.materials.length === 0) return { totalCost: 0, breakdown: [] };
     // calculateCOGS expects materials with materialId or materialName and a total ml argument
     const result = calculateCOGS(selectedProject.materials, totalConcentrate || 100);
-    return result.totalCost || 0;
+    return result || { totalCost: 0, breakdown: [] };
   }, [useBibitMix, selectedProject, totalConcentrate, calculateCOGS]);
+
+  const rawMaterialCost = rawMaterialResult.totalCost || 0;
+  const rawMaterialBreakdown = rawMaterialResult.breakdown || [];
 
   // Bibit cost
   const bibitCost = useMemo(() => {
@@ -254,9 +257,13 @@ export default function HitungCOGS() {
               className="form-select"
               value={selectedProjectId}
               onChange={(e) => {
-                setSelectedProjectId(e.target.value);
-                setUseBibitMix(false);
+                const val = e.target.value;
+                setSelectedProjectId(val);
                 setSelectedBibitId('');
+                // detect if selected project is a bibit mix
+                const proj = [...projects, ...mappedFormulas].find(p => p.id === val);
+                const isBibitMix = proj && proj.type === 'BIBIT_MIX';
+                setUseBibitMix(!!isBibitMix);
               }}
             >
               <option value="">Pilih formula...</option>
@@ -303,7 +310,7 @@ export default function HitungCOGS() {
                 onChange={(e) => setBibitSearch(e.target.value)}
               />
             </div>
-            {bibitSearch && filteredBibits.length > 0 && (
+            {filteredBibits.length > 0 && (
               <select
                 className="form-select"
                 value={selectedBibitId}
@@ -466,8 +473,19 @@ export default function HitungCOGS() {
           </div>
 
           <div className="cost-breakdown">
+            {rawMaterialBreakdown && rawMaterialBreakdown.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div className="text-sm text-secondary">Detail bahan (Concentrate)</div>
+                {rawMaterialBreakdown.map(b => (
+                  <div key={b.materialId} className="cost-row">
+                    <span>{b.name} — {b.percentage}% ({b.amount.toFixed(2)} ml)</span>
+                    <span className="font-mono">{b.cost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="cost-row">
-              <span>{useBibitMix ? (selectedBibit ? 'Bibit Tunggal' : 'Bibit Mix') : 'Raw Materials'}</span>
+              <span>{useBibitMix ? (selectedBibit ? 'Bibit Tunggal' : 'Bibit Mix') : 'Raw Materials (Concentrate)'}</span>
               <span className="font-mono">
                 {(useBibitMix ? bibitCost : rawMaterialCost).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
               </span>

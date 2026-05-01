@@ -144,7 +144,9 @@ export function AppProvider({ children }) {
   }, [getAllMaterials]);
 
   const getMaterialByName = useCallback((name) => {
-    return getAllMaterials().find(m => m.name.toLowerCase() === name.toLowerCase());
+    if (!name) return undefined;
+    const target = String(name).toLowerCase();
+    return getAllMaterials().find(m => (m?.name || '').toLowerCase() === target);
   }, [getAllMaterials]);
 
   // User Materials CRUD
@@ -382,7 +384,7 @@ export function AppProvider({ children }) {
       }
     });
 
-    return { totalCost, breakdown, costPerMl: totalCost / totalMl };
+    return { totalCost, breakdown, costPerMl: totalMl ? totalCost / totalMl : 0 };
   }, [getMaterialById, getMaterialByName]);
 
   const value = {
