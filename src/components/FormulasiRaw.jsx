@@ -154,6 +154,12 @@ export default function FormulasiRaw() {
       usage: m.usage || 'Base',
     }));
 
+    // compute estimated cost using calculateCOGS (use totalMass as basis)
+    let estimate = { totalCost: 0, costPerMl: 0 };
+    try {
+      estimate = calculateCOGS(mats, totalMass || 100);
+    } catch (e) {}
+
     const project = {
       id: editingId || undefined,
       name: projectName,
@@ -165,6 +171,8 @@ export default function FormulasiRaw() {
       pyramid: pyramidTotals,
       notes,
       totalMass,
+      estimatedCost: estimate.totalCost || 0,
+      estimatedCostPerMl: estimate.costPerMl || 0,
       updatedAt: new Date().toISOString(),
     };
 

@@ -245,6 +245,9 @@ export default function FormulasiBibit() {
         projectType: projectTypes.BIBIT_TWEAK,
         materials: tweakMats,
         notes,
+        totalAmount,
+        estimatedTotalCost: tweakTotalCost || 0,
+        estimatedCostPerUnit: tweakCostPerUnit || 0,
         createdAt: new Date().toISOString(),
       };
     }
