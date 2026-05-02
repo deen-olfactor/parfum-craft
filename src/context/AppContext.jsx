@@ -350,7 +350,7 @@ export function AppProvider({ children }) {
     materials.forEach(pm => {
       const material = getMaterialById(pm.materialId);
       if (material) {
-        const pricePerUnit = material.pricePerUnit || material.pricePerGram || 0;
+        const pricePerUnit = material.pricePerMl || material.pricePerUnit || material.pricePerGram || 0;
         const amount = (pm.percentage / 100) * totalMl;
         const cost = amount * pricePerUnit;
         totalCost += cost;
@@ -367,7 +367,7 @@ export function AppProvider({ children }) {
         // Try to find by name if materialId doesn't match
         const matByName = getMaterialByName(pm.materialName || pm.name);
         if (matByName) {
-          const pricePerUnit = matByName.pricePerUnit || 0;
+          const pricePerUnit = matByName.pricePerMl || matByName.pricePerUnit || matByName.pricePerGram || 0;
           const amount = (pm.percentage / 100) * totalMl;
           const cost = amount * pricePerUnit;
           totalCost += cost;
