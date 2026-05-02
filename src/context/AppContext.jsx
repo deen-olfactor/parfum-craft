@@ -344,37 +344,60 @@ export function AppProvider({ children }) {
 
   // COGS Calculation
   const calculateCOGS = useCallback((materials, totalMl = 100) => {
+    // materials can be specified either as { percentage } or { amount, unit }
     let totalCost = 0;
     const breakdown = [];
 
+    const hasAmount = materials.some(pm => pm.amount != null);
+    const totalAmount = hasAmount ? materials.reduce((s, m) => s + (m.amount || 0), 0) : 0;
+
     materials.forEach(pm => {
       const material = getMaterialById(pm.materialId);
+      // determine portion (fraction of the formula)
+      let portion = 0;
+      if (hasAmount) {
+        portion = totalAmount > 0 ? ((pm.amount || 0) / totalAmount) : 0;
+      } else {
+        portion = (pm.percentage || 0) / 100;
+      }
+
       if (material) {
-        const pricePerUnit = material.pricePerMl || material.pricePerUnit || material.pricePerGram || 0;
-        const amount = (pm.percentage / 100) * totalMl;
+        // determine price unit depending on unit preference
+        const unit = pm.unit || (material.pricePerMl ? 'ml' : (material.pricePerGram ? 'g' : 'unit'));
+        let pricePerUnit = 0;
+        if (unit === 'ml') pricePerUnit = material.pricePerMl || material.pricePerUnit || material.pricePerGram || 0;
+        else if (unit === 'g') pricePerUnit = material.pricePerGram || material.pricePerUnit || material.pricePerMl || 0;
+        else pricePerUnit = material.pricePerUnit || material.pricePerMl || material.pricePerGram || 0;
+
+        const amount = portion * totalMl; // amount expressed in ml-equivalent for costing
         const cost = amount * pricePerUnit;
         totalCost += cost;
         breakdown.push({
           materialId: pm.materialId,
           name: material.name,
-          percentage: pm.percentage,
+          percentage: portion * 100,
           amount,
           pricePerUnit,
           cost,
           type: material.type,
         });
       } else {
-        // Try to find by name if materialId doesn't match
+        // fallback: try find by name
         const matByName = getMaterialByName(pm.materialName || pm.name);
         if (matByName) {
-          const pricePerUnit = matByName.pricePerMl || matByName.pricePerUnit || matByName.pricePerGram || 0;
-          const amount = (pm.percentage / 100) * totalMl;
+          const unit = pm.unit || (matByName.pricePerMl ? 'ml' : (matByName.pricePerGram ? 'g' : 'unit'));
+          let pricePerUnit = 0;
+          if (unit === 'ml') pricePerUnit = matByName.pricePerMl || matByName.pricePerUnit || matByName.pricePerGram || 0;
+          else if (unit === 'g') pricePerUnit = matByName.pricePerGram || matByName.pricePerUnit || matByName.pricePerMl || 0;
+          else pricePerUnit = matByName.pricePerUnit || matByName.pricePerMl || matByName.pricePerGram || 0;
+
+          const amount = portion * totalMl;
           const cost = amount * pricePerUnit;
           totalCost += cost;
           breakdown.push({
             materialId: matByName.id,
             name: matByName.name,
-            percentage: pm.percentage,
+            percentage: portion * 100,
             amount,
             pricePerUnit,
             cost,

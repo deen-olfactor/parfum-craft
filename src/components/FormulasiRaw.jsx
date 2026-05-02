@@ -48,6 +48,7 @@ export default function FormulasiRaw() {
   const [notes, setNotes] = useState('');
   const [showMaterialPicker, setShowMaterialPicker] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalMass, setTotalMass] = useState(100); // grams (or ml equivalent) for formula sizing
 
   // Pyramid notes
   const [pyramidNote, setPyramidNote] = useState({ name: '', usage: 'Top', percentage: 0 });
@@ -70,38 +71,37 @@ export default function FormulasiRaw() {
     } else {
       material.usage = 'Base';
     }
-    setMaterials([...materials, { materialId: material.id, percentage: 0, usage: material.usage || 'Base' }]);
+    // default to 0 grams
+    setMaterials([...materials, { materialId: material.id, amount: 0, unit: 'g', usage: material.usage || 'Base' }]);
   };
 
   const removeMaterial = (materialId) => {
     setMaterials(materials.filter(m => m.materialId !== materialId));
   };
 
-  const updatePercentage = (materialId, percentage) => {
+  const updateAmount = (materialId, amount) => {
     setMaterials(materials.map(m =>
       m.materialId === materialId
-        ? { ...m, percentage: Math.min(100, Math.max(0, percentage)) }
+        ? { ...m, amount: Math.max(0, amount) }
         : m
     ));
   };
 
-  const totalPercentage = useMemo(() =>
-    materials.reduce((sum, m) => sum + (m.percentage || 0), 0),
-  [materials]);
+  const updateUnit = (materialId, unit) => {
+    setMaterials(materials.map(m => m.materialId === materialId ? { ...m, unit } : m));
+  };
 
-  // Calculate cost in IDR
+  const totalAmount = useMemo(() => materials.reduce((s, m) => s + (m.amount || 0), 0), [materials]);
+
+  // Calculate cost in IDR using calculateCOGS for consistency (totalMass as basis)
   const totalCost = useMemo(() => {
-    let costIDR = 0;
-    materials.forEach(fm => {
-      const mat = allMaterials.find(m => m.id === fm.materialId);
-      if (mat) {
-        const pricePerMl = getPricePerMl(mat) || 0;
-        const amountMl = (fm.percentage / 100) * 100; // estimate for 100ml concentrate
-        costIDR += amountMl * pricePerMl;
-      }
-    });
-    return costIDR;
-  }, [materials, allMaterials, getPricePerMl]);
+    try {
+      const result = calculateCOGS(materials, totalMass || 100);
+      return result.totalCost || 0;
+    } catch (e) {
+      return 0;
+    }
+  }, [materials, calculateCOGS, totalMass]);
 
   // Group materials by pyramid level
   const groupedMaterials = useMemo(() => {
@@ -138,10 +138,19 @@ export default function FormulasiRaw() {
       alert('Tambahkan minimal satu bahan');
       return;
     }
-    if (Math.abs(totalPercentage - 100) > 0.1) {
-      alert('Total persentase harus 100%');
+    if (totalAmount <= 0) {
+      alert('Masukkan jumlah bahan (gram) yang benar');
       return;
     }
+
+    // compute percentages from amounts
+    const mats = materials.map(m => ({
+      materialId: m.materialId,
+      amount: m.amount || 0,
+      unit: m.unit || 'g',
+      percentage: totalAmount > 0 ? ((m.amount || 0) / totalAmount * 100) : 0,
+      usage: m.usage || 'Base',
+    }));
 
     const project = {
       id: editingId || undefined,
@@ -150,9 +159,10 @@ export default function FormulasiRaw() {
       projectType: projectTypes.RAW_TO_PERFUME,
       fragranceType,
       solventType,
-      materials,
+      materials: mats,
       pyramid: pyramidTotals,
       notes,
+      totalMass,
       updatedAt: new Date().toISOString(),
     };
 
@@ -195,8 +205,9 @@ export default function FormulasiRaw() {
             {pyramidTotals[usage].toFixed(1)}%
           </span>
         </div>
-        {group.map(({ materialId, percentage }) => {
+        {group.map(({ materialId, amount, unit }) => {
           const info = getMaterialInfo(materialId);
+          const pct = totalAmount > 0 ? ((amount || 0) / totalAmount * 100) : 0;
           return (
             <div key={materialId} className="formula-material-row">
               <div className="material-info">
@@ -206,18 +217,27 @@ export default function FormulasiRaw() {
                 </div>
               </div>
               <div className="number-input">
-                <button onClick={() => updatePercentage(materialId, (percentage || 0) - 0.5)}>-</button>
+                <button onClick={() => updateAmount(materialId, (amount || 0) - 0.1)}>-</button>
                 <input
                   type="number"
                   className="form-input"
-                  value={percentage || 0}
-                  onChange={(e) => updatePercentage(materialId, parseFloat(e.target.value) || 0)}
+                  value={amount || 0}
+                  onChange={(e) => updateAmount(materialId, parseFloat(e.target.value) || 0)}
                   min="0"
-                  max="100"
                   step="0.1"
+                  style={{ width: '120px' }}
                 />
-                <button onClick={() => updatePercentage(materialId, (percentage || 0) + 0.5)}>+</button>
-                <span>%</span>
+                <select value={unit || 'g'} onChange={(e) => updateUnit(materialId, e.target.value)} className="form-input" style={{ width: '80px', marginLeft: '8px' }}>
+                  <option value="g">g</option>
+                  <option value="ml">ml</option>
+                </select>
+                <button onClick={() => updateAmount(materialId, (amount || 0) + 0.1)}>+</button>
+              </div>
+              <div className="font-mono text-sm" style={{ marginLeft: '12px' }}>
+                {pct.toFixed(1)}%
+              </div>
+              <div className="font-mono text-sm" style={{ marginLeft: '12px' }}>
+                {(info.pricePerUnit || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/g
               </div>
               <button
                 className="btn btn-secondary btn-icon"
@@ -307,6 +327,14 @@ export default function FormulasiRaw() {
           </div>
         ) : (
           <div>
+            <div className="form-group">
+              <label className="form-label">Total Formula (gram/ml)</label>
+              <input type="number" className="form-input" value={totalMass} onChange={(e) => setTotalMass(parseFloat(e.target.value) || 0)} min="1" />
+              <div className="text-sm text-secondary" style={{ marginTop: '6px' }}>
+                Total mass yang dipakai untuk menghitung persentase bahan.
+              </div>
+            </div>
+
             {renderMaterialGroup('Top', 'Top Note', '#007AFF')}
             {renderMaterialGroup('Middle', 'Middle Note', '#34C759')}
             {renderMaterialGroup('Base', 'Base Note', '#FF9500')}
@@ -316,20 +344,20 @@ export default function FormulasiRaw() {
                 <span>Total:</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono" style={{ fontSize: '20px', fontWeight: 600 }}>
-                    {totalPercentage.toFixed(1)}%
+                    {(totalAmount > 0 && totalMass > 0) ? ((totalAmount / totalMass * 100).toFixed(1)) + '%' : '0.0%'}
                   </span>
-                  {Math.abs(totalPercentage - 100) <= 0.1 ? (
+                  {Math.abs((totalAmount / totalMass * 100 || 0) - 100) <= 0.1 ? (
                     <span className="badge badge-middle" style={{ background: '#34C759', color: 'white' }}>✓</span>
                   ) : (
                     <span className="badge badge-top" style={{ background: '#FF9500', color: 'white' }}>
-                      {totalPercentage < 100 ? 'Kurang' : 'Berlebih'} {Math.abs(totalPercentage - 100).toFixed(1)}%
+                      {((totalAmount / totalMass * 100 || 0) < 100 ? 'Kurang' : 'Berlebih')} {Math.abs((totalAmount / totalMass * 100 || 0) - 100).toFixed(1)}%
                     </span>
                   )}
                 </div>
               </div>
               {materials.length > 0 && totalCost > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                  <span className="text-secondary">Estimated Cost (100ml):</span>
+                  <span className="text-secondary">Estimated Cost ({totalMass} g):</span>
                   <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
                     {totalCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                   </div>
