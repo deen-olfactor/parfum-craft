@@ -88,18 +88,22 @@ export default function FormulasiBibit() {
     return basePct + matsPct;
   }, [selectedBibit, bibitAmount, tweakMaterials, totalTweakAmount]);
 
-  const totalCost = useMemo(() => {
-    // For mix: keep previous percentage-based simple calc
-    if (activeTab === 'mix') {
-      let total = 0;
-      bibitSelections.forEach(bs => {
-        const b = bibits.find(x => x.id === bs.bibitId);
-        if (b) total += (bs.percentage / 100) * b.pricePerMl; // cost per 1ml of concentrate
-      });
-      return total; // represents cost per 1ml of concentrate
-    }
+  // Mix & Tweak cost calculations
+  const mixCostPerMl = useMemo(() => {
+    if (activeTab !== 'mix') return 0;
+    let costPerMl = 0;
+    bibitSelections.forEach(bs => {
+      const b = bibits.find(x => x.id === bs.bibitId);
+      if (b) costPerMl += (bs.percentage / 100) * (b?.pricePerMl || 0);
+    });
+    return costPerMl;
+  }, [activeTab, bibitSelections, bibits]);
 
-    // For tweak: amount-based inputs. Compute cost per unit (unit = same as amounts provided)
+  const [totalMixVolume, setTotalMixVolume] = useState(100); // ml - user can change to compute total cost
+  const mixTotalCost = useMemo(() => (mixCostPerMl || 0) * (totalMixVolume || 0), [mixCostPerMl, totalMixVolume]);
+
+  const tweakCosts = useMemo(() => {
+    // returns { totalAmount, totalCost, costPerUnit }
     let totalAmount = 0;
     let costSum = 0;
 
@@ -124,10 +128,13 @@ export default function FormulasiBibit() {
     });
 
     const costPerUnit = totalAmount > 0 ? (costSum / totalAmount) : 0;
-    return costPerUnit;
-  }, [activeTab, bibitSelections, selectedBibit, bibitAmount, bibitUnit, tweakMaterials, bibits, allMaterials, getPricePerMl]);
+    return { totalAmount, totalCost: costSum, costPerUnit };
+  }, [activeTab, selectedBibit, bibitAmount, bibitUnit, tweakMaterials, bibits, allMaterials, getPricePerMl]);
 
-  const estimatedCostPer100ml = useMemo(() => (totalCost * 100) || 0, [totalCost]);
+  // derived
+  const tweakTotalAmount = tweakCosts.totalAmount || 0;
+  const tweakTotalCost = tweakCosts.totalCost || 0;
+  const tweakCostPerUnit = tweakCosts.costPerUnit || 0;
 
   // Mix Bibit functions
   const addBibit = (bibit) => {
@@ -378,18 +385,26 @@ export default function FormulasiBibit() {
                 </div>
                 {/* Estimated cost for mix */}
                 {bibitSelections.length > 0 && (
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <label className="form-label" style={{ margin: 0 }}>Total product volume (ml):</label>
+                      <input type="number" className="form-input" value={totalMixVolume} onChange={(e) => setTotalMixVolume(parseFloat(e.target.value) || 0)} min="1" style={{ width: '120px' }} />
+                    </div>
+                  </div>
+                )}
+                {bibitSelections.length > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                     <span className="text-secondary">Estimated Cost (per ml):</span>
                     <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
-                      {(totalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml
+                      {(mixCostPerMl || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml
                     </div>
                   </div>
                 )}
                 {bibitSelections.length > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                    <span className="text-secondary">Estimated Cost (per 100 ml):</span>
+                    <span className="text-secondary">Estimated Cost (for total {totalMixVolume} ml):</span>
                     <div className="font-mono" style={{ fontSize: '14px', fontWeight: 600 }}>
-                      {(totalCost * 100 || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                      {(mixTotalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                     </div>
                   </div>
                 )}
@@ -528,20 +543,20 @@ export default function FormulasiBibit() {
                         {totalTweakPercentage.toFixed(1)}%
                       </span>
                     </div>
-                    {/* Estimated cost for tweak (per unit) */}
-                    {tweakMaterials.length > 0 && (
+                    {/* Estimated cost for tweak */}
+                    {tweakTotalAmount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                        <span className="text-secondary">Estimated Cost (avg per unit):</span>
+                        <span className="text-secondary">Estimated Cost (for total {tweakTotalAmount} units):</span>
                         <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
-                          {(totalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                          {(tweakTotalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                         </div>
                       </div>
                     )}
-                    {tweakMaterials.length > 0 && (
+                    {tweakTotalAmount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                        <span className="text-secondary">Estimated Cost (per 100 units):</span>
+                        <span className="text-secondary">Estimated Cost (per unit):</span>
                         <div className="font-mono" style={{ fontSize: '14px', fontWeight: 600 }}>
-                          {(totalCost * 100 || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                          {(tweakCostPerUnit || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                         </div>
                       </div>
                     )}
