@@ -19,7 +19,7 @@ const CONCENTRATION_TYPES = [
 ];
 
 export default function HitungCOGS() {
-  const { projects, formulas, bibits, components, calculateCOGS, saveProject } = useApp();
+  const { projects, formulas, bibits, components, calculateCOGS, saveProject, getPricePerMl } = useApp();
 
   // Project selection
   const [selectedProjectId, setSelectedProjectId] = useState('');
