@@ -18,7 +18,7 @@ const SOLVENT_TYPES = [
 ];
 
 export default function FormulasiRaw() {
-  const { getAllMaterials, saveProject, projectTypes, getProject } = useApp();
+  const { getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl } = useApp();
   const [projectName, setProjectName] = useState('');
   const [editingId, setEditingId] = useState(null);
 
@@ -94,12 +94,14 @@ export default function FormulasiRaw() {
     let costIDR = 0;
     materials.forEach(fm => {
       const mat = allMaterials.find(m => m.id === fm.materialId);
-      if (mat && mat.pricePerUnit) {
-        costIDR += (fm.percentage / 100) * mat.pricePerUnit;
+      if (mat) {
+        const pricePerMl = getPricePerMl(mat) || 0;
+        const amountMl = (fm.percentage / 100) * 100; // estimate for 100ml concentrate
+        costIDR += amountMl * pricePerMl;
       }
     });
     return costIDR;
-  }, [materials, allMaterials]);
+  }, [materials, allMaterials, getPricePerMl]);
 
   // Group materials by pyramid level
   const groupedMaterials = useMemo(() => {

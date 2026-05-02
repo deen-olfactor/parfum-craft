@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function FormulasiBibit() {
-  const { bibits, getAllMaterials, saveProject, projectTypes, getProject } = useApp();
+  const { bibits, getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl } = useApp();
   const [activeTab, setActiveTab] = useState('mix');
   const [editingId, setEditingId] = useState(null);
 
@@ -91,7 +91,10 @@ export default function FormulasiBibit() {
       }
       tweakMaterials.forEach(tm => {
         const mat = allMaterials.find(m => m.id === tm.materialId);
-        if (mat) total += (tm.percentage / 100) * (mat.pricePerUnit || 0);
+        if (mat) {
+          const pricePerMl = getPricePerMl(mat) || 0;
+          total += (tm.percentage / 100) * pricePerMl; // per 1ml concentrate
+        }
       });
     }
     return total; // represents cost per 1ml of concentrate

@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { PROCESS_TYPES } from '../context/AppContext';
 
 export default function FormulasiTincture() {
-  const { getAllMaterials, addProcessedMaterial, addStock, getStock, getProject } = useApp();
+  const { getAllMaterials, addProcessedMaterial, addStock, getStock, getProject, getPricePerMl } = useApp();
 
   const [step, setStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
@@ -61,9 +61,9 @@ export default function FormulasiTincture() {
 
   const estimatedCost = useMemo(() => {
     if (!parentMaterial) return 0;
-    const pricePerUnit = parentMaterial.pricePerUnit || parentMaterial.pricePerGram || 0;
-    return calculatedAmount * pricePerUnit;
-  }, [parentMaterial, calculatedAmount]);
+    const pricePerMl = getPricePerMl(parentMaterial) || 0;
+    return calculatedAmount * pricePerMl;
+  }, [parentMaterial, calculatedAmount, getPricePerMl]);
 
   const existingStock = useMemo(() => {
     if (!selectedMaterial) return null;
