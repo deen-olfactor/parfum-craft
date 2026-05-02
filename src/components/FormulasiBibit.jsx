@@ -43,10 +43,11 @@ export default function FormulasiBibit() {
   // Mix Bibit state
   const [bibitSelections, setBibitSelections] = useState([]);
 
-  // Tweak Bibit state
+  // Tweak Bibit state (amount-based inputs: amount + unit)
   const [selectedBibit, setSelectedBibit] = useState(null);
   const [tweakMaterials, setTweakMaterials] = useState([]);
-  const [bibitPercentage, setBibitPercentage] = useState(80);
+  const [bibitAmount, setBibitAmount] = useState(80); // default 80 ml
+  const [bibitUnit, setBibitUnit] = useState('ml');
 
   const allMaterials = getAllMaterials();
 
@@ -71,34 +72,56 @@ export default function FormulasiBibit() {
     bibitSelections.reduce((sum, b) => sum + (b.percentage || 0), 0),
   [bibitSelections]);
 
+  const totalTweakAmount = useMemo(() => {
+    const base = selectedBibit ? (bibitAmount || 0) : 0;
+    return base + tweakMaterials.reduce((s, m) => s + (m.amount || 0), 0);
+  }, [selectedBibit, bibitAmount, tweakMaterials]);
+
   const totalTweakPercentage = useMemo(() => {
-    const bibitsPart = selectedBibit ? bibitPercentage : 0;
-    const materialsPart = tweakMaterials.reduce((sum, m) => sum + (m.percentage || 0), 0);
-    return bibitsPart + materialsPart;
-  }, [selectedBibit, bibitPercentage, tweakMaterials]);
+    if (totalTweakAmount === 0) return 0;
+    const basePct = selectedBibit ? ((bibitAmount || 0) / totalTweakAmount * 100) : 0;
+    const matsPct = tweakMaterials.reduce((s, m) => s + ((m.amount || 0) / totalTweakAmount * 100), 0);
+    return basePct + matsPct;
+  }, [selectedBibit, bibitAmount, tweakMaterials, totalTweakAmount]);
 
   const totalCost = useMemo(() => {
-    let total = 0;
+    // For mix: keep previous percentage-based simple calc
     if (activeTab === 'mix') {
+      let total = 0;
       bibitSelections.forEach(bs => {
         const b = bibits.find(x => x.id === bs.bibitId);
         if (b) total += (bs.percentage / 100) * b.pricePerMl; // cost per 1ml of concentrate
       });
-    } else {
-      if (selectedBibit) {
-        const b = bibits.find(x => x.id === selectedBibit);
-        if (b) total += (bibitPercentage / 100) * b.pricePerMl;
-      }
-      tweakMaterials.forEach(tm => {
-        const mat = allMaterials.find(m => m.id === tm.materialId);
-        if (mat) {
-          const pricePerMl = getPricePerMl(mat) || 0;
-          total += (tm.percentage / 100) * pricePerMl; // per 1ml concentrate
-        }
-      });
+      return total; // represents cost per 1ml of concentrate
     }
-    return total; // represents cost per 1ml of concentrate
-  }, [activeTab, bibitSelections, selectedBibit, bibitPercentage, tweakMaterials, bibits, allMaterials]);
+
+    // For tweak: amount-based inputs. Compute cost per unit (unit = same as amounts provided)
+    let totalAmount = 0;
+    let costSum = 0;
+
+    if (selectedBibit) {
+      const b = bibits.find(x => x.id === selectedBibit);
+      const amt = bibitAmount || 0;
+      const unit = bibitUnit || 'ml';
+      totalAmount += amt;
+      const price = unit === 'ml' ? (b?.pricePerMl || 0) : (b?.pricePerGram || b?.pricePerUnit || 0);
+      costSum += amt * price;
+    }
+
+    tweakMaterials.forEach(tm => {
+      const mat = allMaterials.find(m => m.id === tm.materialId);
+      const amt = tm.amount || 0;
+      const unit = tm.unit || 'ml';
+      totalAmount += amt;
+      if (mat) {
+        const price = unit === 'ml' ? (getPricePerMl(mat) || 0) : (mat.pricePerGram || mat.pricePerUnit || 0);
+        costSum += amt * price;
+      }
+    });
+
+    const costPerUnit = totalAmount > 0 ? (costSum / totalAmount) : 0;
+    return costPerUnit;
+  }, [activeTab, bibitSelections, selectedBibit, bibitAmount, bibitUnit, tweakMaterials, bibits, allMaterials, getPricePerMl]);
 
   const estimatedCostPer100ml = useMemo(() => (totalCost * 100) || 0, [totalCost]);
 
@@ -121,16 +144,22 @@ export default function FormulasiBibit() {
   // Tweak functions
   const addTweakMaterial = (material) => {
     if (tweakMaterials.find(m => m.materialId === material.id)) return;
-    setTweakMaterials([...tweakMaterials, { materialId: material.id, percentage: 0 }]);
+    setTweakMaterials([...tweakMaterials, { materialId: material.id, amount: 0, unit: 'ml' }]);
   };
 
   const removeTweakMaterial = (materialId) => {
     setTweakMaterials(tweakMaterials.filter(m => m.materialId !== materialId));
   };
 
-  const updateTweakPercentage = (materialId, percentage) => {
+  const updateTweakAmount = (materialId, amount) => {
     setTweakMaterials(tweakMaterials.map(m =>
-      m.materialId === materialId ? { ...m, percentage: Math.min(100, Math.max(0, percentage)) } : m
+      m.materialId === materialId ? { ...m, amount: Math.max(0, amount) } : m
+    ));
+  };
+
+  const updateTweakUnit = (materialId, unit) => {
+    setTweakMaterials(tweakMaterials.map(m =>
+      m.materialId === materialId ? { ...m, unit } : m
     ));
   };
 
@@ -174,15 +203,21 @@ export default function FormulasiBibit() {
         return;
       }
 
+      const totalAmount = (bibitAmount || 0) + tweakMaterials.reduce((s, m) => s + (m.amount || 0), 0);
+
       const tweakMats = tweakMaterials.map(tm => ({
         materialId: tm.materialId,
-        percentage: tm.percentage,
+        amount: tm.amount || 0,
+        unit: tm.unit || 'ml',
+        percentage: totalAmount > 0 ? ((tm.amount || 0) / totalAmount * 100) : 0,
         isBibit: false,
       }));
 
       tweakMats.unshift({
         bibitId: selectedBibit,
-        percentage: bibitPercentage,
+        amount: bibitAmount || 0,
+        unit: bibitUnit || 'ml',
+        percentage: totalAmount > 0 ? ((bibitAmount || 0) / totalAmount * 100) : 0,
         isBibit: true,
       });
 
@@ -385,19 +420,26 @@ export default function FormulasiBibit() {
           {selectedBibit && (
             <>
               <div className="form-group">
-                <label className="form-label">Persentase Bibit Base: {bibitPercentage}%</label>
-                <input
-                  type="range"
-                  min="10"
-                  max="95"
-                  value={bibitPercentage}
-                  onChange={(e) => setBibitPercentage(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
-                />
+                <label className="form-label">Jumlah Bibit Base</label>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={bibitAmount}
+                    onChange={(e) => setBibitAmount(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.1"
+                    style={{ width: '120px' }}
+                  />
+                  <select value={bibitUnit} onChange={(e) => setBibitUnit(e.target.value)} className="form-input" style={{ width: '100px' }}>
+                    <option value="ml">ml</option>
+                    <option value="g">g</option>
+                  </select>
+                  <div className="text-secondary">{(totalTweakAmount > 0 ? ((bibitAmount || 0) / totalTweakAmount * 100).toFixed(1) : '0.0')}%</div>
+                </div>
                 <div className="flex justify-between text-sm text-secondary">
-                  <span>10%</span>
-                  <span>{100 - bibitPercentage}% left for tweaking</span>
-                  <span>95%</span>
+                  <span>Unit dapat diset ke ml atau g</span>
+                  <span>{totalTweakAmount > 0 ? (100 - (bibitAmount || 0) / totalTweakAmount * 100).toFixed(1) : '100.0'}% left for tweaking</span>
                 </div>
               </div>
 
@@ -429,18 +471,24 @@ export default function FormulasiBibit() {
                           </div>
                         </div>
                         <div className="number-input">
-                          <button onClick={() => updateTweakPercentage(tm.materialId, (tm.percentage || 0) - 0.5)}>-</button>
+                          <button onClick={() => updateTweakAmount(tm.materialId, (tm.amount || 0) - 0.1)}>-</button>
                           <input
                             type="number"
                             className="form-input"
-                            value={tm.percentage || 0}
-                            onChange={(e) => updateTweakPercentage(tm.materialId, parseFloat(e.target.value) || 0)}
+                            value={tm.amount || 0}
+                            onChange={(e) => updateTweakAmount(tm.materialId, parseFloat(e.target.value) || 0)}
                             min="0"
-                            max="100"
                             step="0.1"
+                            style={{ width: '120px' }}
                           />
-                          <button onClick={() => updateTweakPercentage(tm.materialId, (tm.percentage || 0) + 0.5)}>+</button>
-                          <span>%</span>
+                          <select value={tm.unit || 'ml'} onChange={(e) => updateTweakUnit(tm.materialId, e.target.value)} className="form-input" style={{ width: '80px', marginLeft: '8px' }}>
+                            <option value="ml">ml</option>
+                            <option value="g">g</option>
+                          </select>
+                          <button onClick={() => updateTweakAmount(tm.materialId, (tm.amount || 0) + 0.1)}>+</button>
+                        </div>
+                        <div className="font-mono text-sm" style={{ marginLeft: '12px' }}>
+                          {totalTweakAmount > 0 ? ((tm.amount || 0) / totalTweakAmount * 100).toFixed(1) : '0.0'}%
                         </div>
                         <button
                           className="btn btn-secondary btn-icon"
