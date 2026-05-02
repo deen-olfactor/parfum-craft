@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function FormulasiBibit() {
-  const { bibits, getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl } = useApp();
+  const { bibits, getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl, getStock } = useApp();
   const [activeTab, setActiveTab] = useState('mix');
   const [editingId, setEditingId] = useState(null);
 
@@ -122,8 +122,15 @@ export default function FormulasiBibit() {
       const unit = tm.unit || 'ml';
       totalAmount += amt;
       if (mat) {
-        const price = unit === 'ml' ? (getPricePerMl(mat) || 0) : (mat.pricePerGram || mat.pricePerUnit || 0);
-        costSum += amt * price;
+        let price = unit === 'ml' ? (getPricePerMl(mat) || 0) : (mat.pricePerGram || mat.pricePerUnit || 0);
+        // fallback: try stock average price
+        try {
+          if ((!price || price === 0) && typeof getStock === 'function') {
+            const st = getStock(mat.id);
+            if (st && st.purchasePrice && st.quantity) price = st.purchasePrice / st.quantity;
+          }
+        } catch (e) {}
+        costSum += amt * (price || 0);
       }
     });
 
