@@ -1,0 +1,33 @@
+{
+  "bibits": [
+    {
+      "id": "bib_test_001",
+      "name": "Test Bibit A",
+      "brand": "TestCo",
+      "pricePerMl": 1500,
+      "pricePerGram": 0,
+      "pricePerUnit": 0
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj_test_001",
+      "name": "Test Raw Project",
+      "type": "RAW_TO_PERFUME",
+      "materials": [
+        { "materialId": "m1", "percentage": 50 },
+        { "materialId": "m2", "percentage": 50 }
+      ],
+      "updatedAt": "2026-05-02T00:00:00Z"
+    }
+  ],
+  "stocks": [
+    {
+      "id": "st_test_001",
+      "materialId": "m1",
+      "quantity": 1000,
+      "purchasePrice": 1200000,
+      "purchaseDate": "2026-05-01T00:00:00Z"
+    }
+  ]
+}

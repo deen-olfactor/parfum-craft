@@ -95,6 +95,27 @@ export function AppProvider({ children }) {
       // Load seed formulas
       setFormulas(seedFormulasData);
 
+      // Also load optional userSeed.json for testing/demo if present
+      try {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const userSeedPath = require('../data/userSeed.json');
+        if (userSeedPath) {
+          if (Array.isArray(userSeedPath.bibits) && userSeedPath.bibits.length > 0) {
+            const merged = [...seedBibits.filter(s => !userSeedPath.bibits.some(b => b.id === s.id)), ...userSeedPath.bibits];
+            setBibits(merged);
+          }
+          if (Array.isArray(userSeedPath.projects) && userSeedPath.projects.length > 0) {
+            const existing = [];
+            setProjects(prev => [ ...userSeedPath.projects, ...prev ]);
+          }
+          if (Array.isArray(userSeedPath.stocks) && userSeedPath.stocks.length > 0) {
+            setStocks(prev => [ ...userSeedPath.stocks, ...prev ]);
+          }
+        }
+      } catch (e) {
+        // ignore missing userSeed
+      }
+
       if (savedUser) setUser(JSON.parse(savedUser));
       if (savedUserMaterials) setUserMaterials(JSON.parse(savedUserMaterials));
       if (savedStocks) setStocks(JSON.parse(savedStocks));
