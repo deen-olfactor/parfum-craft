@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 const FRAGRANCE_TYPES = [
@@ -18,8 +18,30 @@ const SOLVENT_TYPES = [
 ];
 
 export default function FormulasiRaw() {
-  const { getAllMaterials, saveProject, projectTypes } = useApp();
+  const { getAllMaterials, saveProject, projectTypes, getProject } = useApp();
   const [projectName, setProjectName] = useState('');
+  const [editingId, setEditingId] = useState(null);
+
+  // Load edit project if redirected from Projects
+  useEffect(() => {
+    try {
+      const editId = localStorage.getItem('pf_edit_project');
+      if (editId) {
+        const p = getProject(editId);
+        if (p && p.type === 'RAW_TO_PERFUME') {
+          setEditingId(editId);
+          setProjectName(p.name || '');
+          setFragranceType(p.fragranceType || 'EDP');
+          setSolventType(p.solventType || 'Ethanol 96%');
+          setMaterials(p.materials || []);
+          setNotes(p.notes || '');
+        }
+        localStorage.removeItem('pf_edit_project');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [getProject]);
   const [fragranceType, setFragranceType] = useState('EDP');
   const [solventType, setSolventType] = useState('Ethanol 96%');
   const [materials, setMaterials] = useState([]);
@@ -120,6 +142,7 @@ export default function FormulasiRaw() {
     }
 
     const project = {
+      id: editingId || undefined,
       name: projectName,
       type: 'RAW_TO_PERFUME',
       projectType: projectTypes.RAW_TO_PERFUME,
@@ -128,13 +151,14 @@ export default function FormulasiRaw() {
       materials,
       pyramid: pyramidTotals,
       notes,
-      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     saveProject(project);
-    alert('Project disimpan!');
+    alert(editingId ? 'Project diperbarui!' : 'Project disimpan!');
 
     // Reset form
+    setEditingId(null);
     setProjectName('');
     setFragranceType('EDP');
     setSolventType('Ethanol 96%');

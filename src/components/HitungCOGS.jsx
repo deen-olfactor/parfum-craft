@@ -57,7 +57,7 @@ export default function HitungCOGS() {
   }, [formulas]);
 
   const combinedRawProjects = useMemo(() => {
-    const fromProjects = projects.filter(p => p.type === 'RAW_TO_PERFUME');
+    const fromProjects = projects.filter(p => p.type === 'RAW_TO_PERFUME' || p.type === 'PRODUCTION');
     return [...fromProjects, ...mappedFormulas];
   }, [projects, mappedFormulas]);
 

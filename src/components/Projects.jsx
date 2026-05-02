@@ -126,6 +126,24 @@ export default function Projects() {
                     >
                       Hapus
                     </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        // Mark project for editing and navigate to appropriate form
+                        try { localStorage.setItem('pf_edit_project', project.id); } catch(e){}
+                        if (project.type === 'RAW_TO_PERFUME') {
+                          window.location.hash = 'formulasi-raw';
+                        } else if (project.type === 'BIBIT_MIX' || project.type === 'BIBIT_TWEAK') {
+                          window.location.hash = 'formulasi-bibit';
+                        } else if (project.type === 'PRODUCTION') {
+                          window.location.hash = 'cogs';
+                        } else {
+                          window.location.hash = 'formulasi-raw';
+                        }
+                      }}
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
 
