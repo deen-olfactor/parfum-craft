@@ -1,11 +1,34 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { PROCESS_TYPES } from '../context/AppContext';
 
 export default function FormulasiTincture() {
-  const { getAllMaterials, addProcessedMaterial, addStock, getStock } = useApp();
+  const { getAllMaterials, addProcessedMaterial, addStock, getStock, getProject } = useApp();
 
   const [step, setStep] = useState(1);
+  const [editingId, setEditingId] = useState(null);
+
+  useEffect(() => {
+    try {
+      const editId = localStorage.getItem('pf_edit_project');
+      if (editId) {
+        const p = getProject(editId);
+        if (p && (p.type === 'TINCTURE' || p.type === 'DILUTION' || p.type === 'DISTILLATION' || p.type === 'PROCESSED')) {
+          // load into form fields if structure matches
+          setEditingId(editId);
+          setSelectedMaterial(p.parentMaterialId || null);
+          setProcessType(p.processType || 'TINCTURE');
+          setConcentration(p.concentration || 10);
+          setSolvent(p.solvent || '');
+          setTotalVolume(p.totalVolume || 100);
+          setResultName(p.name || '');
+          setNotes(p.notes || '');
+          setStep(2);
+        }
+        localStorage.removeItem('pf_edit_project');
+      }
+    } catch(e){}
+  }, [getProject]);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [processType, setProcessType] = useState('');
   const [concentration, setConcentration] = useState(10);

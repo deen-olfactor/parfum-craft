@@ -1,9 +1,38 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function FormulasiBibit() {
-  const { bibits, getAllMaterials, saveProject, projectTypes } = useApp();
+  const { bibits, getAllMaterials, saveProject, projectTypes, getProject } = useApp();
   const [activeTab, setActiveTab] = useState('mix');
+  const [editingId, setEditingId] = useState(null);
+
+  // Load edit project
+  useEffect(() => {
+    try {
+      const editId = localStorage.getItem('pf_edit_project');
+      if (editId) {
+        const p = getProject(editId);
+        if (p && (p.type === 'BIBIT_MIX' || p.type === 'BIBIT_TWEAK')) {
+          setEditingId(editId);
+          setProjectName(p.name || '');
+          setNotes(p.notes || '');
+          if (p.type === 'BIBIT_MIX') {
+            setActiveTab('mix');
+            setBibitSelections((p.materials || []).map(m => ({ bibitId: m.bibitId, percentage: m.percentage })));
+          } else {
+            setActiveTab('tweak');
+            const mats = (p.materials || []).filter(m => m.isBibit ? false : true);
+            // set selectedBibit from first isBibit
+            const bib = (p.materials || []).find(m => m.isBibit);
+            if (bib) setSelectedBibit(bib.bibitId);
+            setBibitPercentage(bib ? bib.percentage : 80);
+            setTweakMaterials(mats.map(m => ({ materialId: m.materialId, percentage: m.percentage })));
+          }
+        }
+        localStorage.removeItem('pf_edit_project');
+      }
+    } catch(e){}
+  }, [getProject]);
   const [projectName, setProjectName] = useState('');
   const [notes, setNotes] = useState('');
   const [showBibitPicker, setShowBibitPicker] = useState(false);
@@ -53,7 +82,7 @@ export default function FormulasiBibit() {
     if (activeTab === 'mix') {
       bibitSelections.forEach(bs => {
         const b = bibits.find(x => x.id === bs.bibitId);
-        if (b) total += (bs.percentage / 100) * b.pricePerMl;
+        if (b) total += (bs.percentage / 100) * b.pricePerMl; // cost per 1ml of concentrate
       });
     } else {
       if (selectedBibit) {
@@ -65,8 +94,10 @@ export default function FormulasiBibit() {
         if (mat) total += (tm.percentage / 100) * (mat.pricePerUnit || 0);
       });
     }
-    return total;
+    return total; // represents cost per 1ml of concentrate
   }, [activeTab, bibitSelections, selectedBibit, bibitPercentage, tweakMaterials, bibits, allMaterials]);
+
+  const estimatedCostPer100ml = useMemo(() => (totalCost * 100) || 0, [totalCost]);
 
   // Mix Bibit functions
   const addBibit = (bibit) => {
