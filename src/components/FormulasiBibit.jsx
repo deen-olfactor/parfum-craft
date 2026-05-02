@@ -21,12 +21,16 @@ export default function FormulasiBibit() {
             setBibitSelections((p.materials || []).map(m => ({ bibitId: m.bibitId, percentage: m.percentage })));
           } else {
             setActiveTab('tweak');
-            const mats = (p.materials || []).filter(m => m.isBibit ? false : true);
+            const mats = (p.materials || []).filter(m => !m.isBibit);
             // set selectedBibit from first isBibit
             const bib = (p.materials || []).find(m => m.isBibit);
-            if (bib) setSelectedBibit(bib.bibitId);
-            setBibitPercentage(bib ? bib.percentage : 80);
-            setTweakMaterials(mats.map(m => ({ materialId: m.materialId, percentage: m.percentage })));
+            if (bib) {
+              setSelectedBibit(bib.bibitId);
+              // support old projects saved with percentage or new with amount/unit
+              setBibitAmount(bib.amount ?? bib.percentage ?? 80);
+              setBibitUnit(bib.unit || 'ml');
+            }
+            setTweakMaterials(mats.map(m => ({ materialId: m.materialId, amount: m.amount ?? m.percentage ?? 0, unit: m.unit || 'ml' })));
           }
         }
         localStorage.removeItem('pf_edit_project');
