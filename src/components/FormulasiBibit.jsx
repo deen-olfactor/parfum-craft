@@ -376,6 +376,23 @@ export default function FormulasiBibit() {
                     {totalMixPercentage.toFixed(0)}%
                   </span>
                 </div>
+                {/* Estimated cost for mix */}
+                {bibitSelections.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                    <span className="text-secondary">Estimated Cost (per ml):</span>
+                    <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
+                      {(totalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml
+                    </div>
+                  </div>
+                )}
+                {bibitSelections.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span className="text-secondary">Estimated Cost (per 100 ml):</span>
+                    <div className="font-mono" style={{ fontSize: '14px', fontWeight: 600 }}>
+                      {(totalCost * 100 || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -511,6 +528,23 @@ export default function FormulasiBibit() {
                         {totalTweakPercentage.toFixed(1)}%
                       </span>
                     </div>
+                    {/* Estimated cost for tweak (per unit) */}
+                    {tweakMaterials.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                        <span className="text-secondary">Estimated Cost (avg per unit):</span>
+                        <div className="font-mono" style={{ fontSize: '16px', fontWeight: 600 }}>
+                          {(totalCost || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                        </div>
+                      </div>
+                    )}
+                    {tweakMaterials.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                        <span className="text-secondary">Estimated Cost (per 100 units):</span>
+                        <div className="font-mono" style={{ fontSize: '14px', fontWeight: 600 }}>
+                          {(totalCost * 100 || 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
