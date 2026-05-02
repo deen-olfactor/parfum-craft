@@ -96,11 +96,22 @@ export default function HitungCOGS() {
   const solventPerBottle = bottleSize - concentratePerBottle;
   const totalSolvent = solventPerBottle * batchSize;
 
-  // Concentrate cost — calculate directly for the totalConcentrate (ml)
+  // Concentrate cost — prefer project's saved estimate when available, otherwise calculate
   const rawMaterialResult = useMemo(() => {
     if (useBibitMix || !selectedProject || selectedProject.type !== 'RAW_TO_PERFUME') return { totalCost: 0, breakdown: [] };
     if (!selectedProject.materials || selectedProject.materials.length === 0) return { totalCost: 0, breakdown: [] };
-    // calculateCOGS expects materials with materialId or materialName and a total ml argument
+
+    // if project has stored estimate (estimatedCost / estimatedCostPerMl), scale to totalConcentrate
+    if (selectedProject.estimatedCostPerMl != null && selectedProject.estimatedCostPerMl > 0) {
+      const total = (selectedProject.estimatedCostPerMl || 0) * (totalConcentrate || 0);
+      // best-effort breakdown using calculateCOGS but scaled to match total
+      const base = calculateCOGS(selectedProject.materials, selectedProject.totalMass || 100) || { totalCost: 0, breakdown: [] };
+      const scale = base.totalCost > 0 ? (total / base.totalCost) : 1;
+      const scaledBreakdown = base.breakdown.map(b => ({ ...b, cost: (b.cost || 0) * scale }));
+      return { totalCost: total, breakdown: scaledBreakdown, costPerMl: selectedProject.estimatedCostPerMl };
+    }
+
+    // fallback: compute directly for the totalConcentrate
     const result = calculateCOGS(selectedProject.materials, totalConcentrate || 100);
     return result || { totalCost: 0, breakdown: [] };
   }, [useBibitMix, selectedProject, totalConcentrate, calculateCOGS]);
