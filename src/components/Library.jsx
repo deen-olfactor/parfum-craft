@@ -10,6 +10,10 @@ export default function Library() {
   const [showStockModal, setShowStockModal] = useState(false);
   const [selectedMaterialForStock, setSelectedMaterialForStock] = useState(null);
 
+  // sorting
+  const [sortKey, setSortKey] = useState('name'); // name | price | stock | type
+  const [sortOrder, setSortOrder] = useState('asc'); // asc | desc
+
   const [newMaterial, setNewMaterial] = useState({
     name: '', cas: '', type: 'Aroma Chemical', odor: '', usage: 'Base',
     pricePerUnit: '', notes: ''
@@ -25,6 +29,43 @@ export default function Library() {
       return matchesSearch && matchesType;
     });
   }, [allMaterials, searchTerm, typeFilter]);
+
+  const sortedMaterials = useMemo(() => {
+    const arr = [...filteredMaterials];
+    const getStockQty = (id) => {
+      const s = stocks.find(x => x.materialId === id);
+      return s ? s.quantity : 0;
+    };
+
+    arr.sort((a, b) => {
+      let av, bv;
+      if (sortKey === 'name') {
+        av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase();
+        if (av < bv) return sortOrder === 'asc' ? -1 : 1;
+        if (av > bv) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      }
+      if (sortKey === 'price') {
+        av = a.pricePerUnit || a.pricePerMl || a.pricePerGram || 0;
+        bv = b.pricePerUnit || b.pricePerMl || b.pricePerGram || 0;
+      } else if (sortKey === 'stock') {
+        av = getStockQty(a.id);
+        bv = getStockQty(b.id);
+      } else if (sortKey === 'type') {
+        av = (a.type || '').toLowerCase(); bv = (b.type || '').toLowerCase();
+        if (av < bv) return sortOrder === 'asc' ? -1 : 1;
+        if (av > bv) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      }
+
+      // numeric compare for price/stock
+      if (av < bv) return sortOrder === 'asc' ? -1 : 1;
+      if (av > bv) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return arr;
+  }, [filteredMaterials, sortKey, sortOrder, stocks]);
 
   const getStockForMaterial = (materialId) => {
     return stocks.find(s => s.materialId === materialId);
@@ -105,7 +146,7 @@ export default function Library() {
           />
         </div>
 
-        <div className="filter-pills">
+        <div className="filter-pills" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {['', 'Aroma Chemical', 'Natural Isolate', 'Essential Oil', 'Absolute', 'Resinoid', 'CO2 Extract', 'Synthetic', 'Tincture', 'Dilution', 'Base/Accord'].map(t => (
             <button
               key={t}
@@ -115,6 +156,17 @@ export default function Library() {
               {t || 'All'}
             </button>
           ))}
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginRight: '8px' }}>Sort by</label>
+            <select className="form-select" value={sortKey} onChange={(e) => setSortKey(e.target.value)} style={{ width: '160px' }}>
+              <option value="name">Name</option>
+              <option value="price">Price</option>
+              <option value="stock">Stock</option>
+              <option value="type">Type</option>
+            </select>
+            <button className="btn btn-secondary" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>{sortOrder === 'asc' ? '↑' : '↓'}</button>
+          </div>
         </div>
 
         <table className="table">
@@ -130,7 +182,7 @@ export default function Library() {
             </tr>
           </thead>
           <tbody>
-            {filteredMaterials.slice(0, 50).map((material) => {
+            {sortedMaterials.slice(0, 50).map((material) => {
               const stock = getStockForMaterial(material.id);
               return (
                 <tr key={material.id}>
