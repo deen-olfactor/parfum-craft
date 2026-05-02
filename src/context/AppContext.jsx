@@ -132,12 +132,23 @@ export function AppProvider({ children }) {
 
   // All materials (db + user + processed)
   const getAllMaterials = useCallback(() => {
+    // include bibits as material-like entries so pricing lookup works for bibit-based formulas
+    const bibitAsMaterials = (bibits || []).map(b => ({
+      id: b.id,
+      name: b.name,
+      type: 'BIBIT',
+      pricePerMl: b.pricePerMl,
+      pricePerGram: b.pricePerGram,
+      pricePerUnit: b.pricePerUnit,
+    }));
+
     return [
       ...dbMaterials,
       ...userMaterials,
       ...processedMaterials,
+      ...bibitAsMaterials,
     ];
-  }, [dbMaterials, userMaterials, processedMaterials]);
+  }, [dbMaterials, userMaterials, processedMaterials, bibits]);
 
   const getMaterialById = useCallback((id) => {
     return getAllMaterials().find(m => m.id === id);
