@@ -387,6 +387,11 @@ export function AppProvider({ children }) {
     return { totalCost, breakdown, costPerMl: totalMl ? totalCost / totalMl : 0 };
   }, [getMaterialById, getMaterialByName]);
 
+  const getPricePerMl = useCallback((material) => {
+    if (!material) return 0;
+    return material.pricePerMl || material.pricePerUnit || material.pricePerGram || 0;
+  }, []);
+
   const value = {
     user,
     dbMaterials,
@@ -425,6 +430,7 @@ export function AppProvider({ children }) {
     saveProject,
     deleteProject,
     getProject,
+    getPricePerMl,
     calculateCOGS,
     addComponent,
     updateComponent,
