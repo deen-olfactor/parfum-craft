@@ -111,23 +111,34 @@ export default function HitungCOGS() {
   // Bibit cost
   const bibitCost = useMemo(() => {
     if (!useBibitMix) return 0;
+
+    // single bibit selected
     if (selectedBibit) {
-      return totalConcentrate * (selectedBibit.pricePerMl || 0);
+      return totalConcentrate * (getPricePerMl ? (getPricePerMl(selectedBibit) || selectedBibit.pricePerMl || 0) : (selectedBibit.pricePerMl || 0));
     }
-    if (selectedProject && selectedProject.type === 'BIBIT_MIX') {
-      // Sum cost per ml of the mix definition, then multiply by totalConcentrate
-      let totalPer100mlCost = 0;
-      selectedProject.materials?.forEach(m => {
+
+    // if a project is selected and it's a bibit-based project (mix or tweak), convert its materials
+    if (selectedProject && (selectedProject.type === 'BIBIT_MIX' || selectedProject.type === 'BIBIT_TWEAK')) {
+      const projMats = (selectedProject.materials || []).map(m => {
+        // bibit entries stored with bibitId
         if (m.isBibit && m.bibitId) {
-          const b = bibits.find(x => x.id === m.bibitId);
-          if (b) totalPer100mlCost += (m.percentage / 100) * (b.pricePerMl || 0) * 100;
+          // use bibit id as materialId so calculateCOGS can resolve via getMaterialById
+          return { materialId: m.bibitId, amount: m.amount, unit: m.unit, percentage: m.percentage };
         }
-      });
-      // totalPer100mlCost is cost for 100ml, scale to totalConcentrate
-      return (totalPer100mlCost / 100) * totalConcentrate;
+        // raw materials already have materialId or materialName
+        if (m.materialId) return { materialId: m.materialId, amount: m.amount, unit: m.unit, percentage: m.percentage };
+        if (m.materialName) return { materialName: m.materialName, amount: m.amount, unit: m.unit, percentage: m.percentage };
+        return null;
+      }).filter(Boolean);
+
+      if (projMats.length === 0) return 0;
+
+      const result = calculateCOGS(projMats, totalConcentrate || 100);
+      return result.totalCost || 0;
     }
+
     return 0;
-  }, [useBibitMix, selectedBibit, selectedProject, totalConcentrate, bibits]);
+  }, [useBibitMix, selectedBibit, selectedProject, totalConcentrate, bibits, calculateCOGS, getPricePerMl]);
 
   // Component costs
   const bottleComp = bottles.find(c => c.id === selectedBottleId);
