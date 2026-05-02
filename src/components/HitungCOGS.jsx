@@ -61,7 +61,8 @@ export default function HitungCOGS() {
     return [...fromProjects, ...mappedFormulas];
   }, [projects, mappedFormulas]);
 
-  const bibitMixProjects = useMemo(() => projects.filter(p => p.type === 'BIBIT_MIX'), [projects]);
+  // include both mix and tweak projects as bibit-based options
+  const bibitMixProjects = useMemo(() => projects.filter(p => p.type === 'BIBIT_MIX' || p.type === 'BIBIT_TWEAK'), [projects]);
 
   const selectedProject = useMemo(() => {
     return [...projects, ...mappedFormulas].find(p => p.id === selectedProjectId);
@@ -282,9 +283,9 @@ export default function HitungCOGS() {
                 const val = e.target.value;
                 setSelectedProjectId(val);
                 setSelectedBibitId('');
-                // detect if selected project is a bibit mix
+                // detect if selected project is a bibit mix or tweak (both are bibit-based)
                 const proj = [...projects, ...mappedFormulas].find(p => p.id === val);
-                const isBibitMix = proj && proj.type === 'BIBIT_MIX';
+                const isBibitMix = proj && (proj.type === 'BIBIT_MIX' || proj.type === 'BIBIT_TWEAK');
                 setUseBibitMix(!!isBibitMix);
               }}
             >
