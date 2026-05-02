@@ -200,6 +200,20 @@ export default function HitungCOGS() {
       ? `${brandName} - ${variantName}`
       : brandName || variantName || 'Production Run';
 
+    // include estimate metadata and resolved materials so Projects can show COGS info later
+    const resolvedMaterials = (() => {
+      if (selectedProject && Array.isArray(selectedProject.materials) && selectedProject.materials.length > 0) {
+        return selectedProject.materials.map(m => ({ ...m }));
+      }
+      if (useBibitMix && selectedBibit) {
+        return [{ isBibit: true, bibitId: selectedBibit.id, amount: totalConcentrate, unit: 'ml' }];
+      }
+      return [];
+    })();
+
+    const estimatedCost = totalCOGS || 0;
+    const estimatedCostPerMl = totalConcentrate > 0 ? (estimatedCost / totalConcentrate) : (costPerMl || 0);
+
     const productionProject = {
       name: projectName,
       type: 'PRODUCTION',
@@ -222,6 +236,12 @@ export default function HitungCOGS() {
       totalCOGS,
       costPerBottle,
       costPerMl,
+      // persisted estimate fields
+      estimatedCost,
+      estimatedCostPerMl,
+      estimatedCostPerBottle: costPerBottle,
+      // store resolved materials so Projects page can display composition and COGS origin
+      materials: resolvedMaterials,
       components: {
         bottle: bottleComp ? { id: bottleComp.id, name: bottleComp.name, price: bottleComp.pricePerUnit } : null,
         solvent: solventComp ? { id: solventComp.id, name: solventComp.name, price: solventComp.pricePerUnit } : null,

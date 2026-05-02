@@ -150,6 +150,14 @@ export default function Projects() {
                 <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   {getMaterialSummary(project.materials || [])}
                   {project.totalMl && ` • ${project.totalMl}ml`}
+                  {project.batchSize && ` • ${project.batchSize} botol`}
+
+                  {project.estimatedCost != null && (
+                    <div style={{ marginTop: '6px', fontWeight: 600 }}>
+                      {`Est. `}{project.estimatedCost.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
+                      {project.estimatedCostPerMl ? ` • ${project.estimatedCostPerMl.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}/ml` : null}
+                    </div>
+                  )}
                 </div>
 
                 {project.notes && (
