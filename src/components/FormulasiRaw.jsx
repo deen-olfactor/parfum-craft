@@ -18,7 +18,7 @@ const SOLVENT_TYPES = [
 ];
 
 export default function FormulasiRaw() {
-  const { getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl } = useApp();
+  const { getAllMaterials, saveProject, projectTypes, getProject, getPricePerMl, calculateCOGS } = useApp();
   const [projectName, setProjectName] = useState('');
   const [editingId, setEditingId] = useState(null);
 
@@ -92,6 +92,8 @@ export default function FormulasiRaw() {
   };
 
   const totalAmount = useMemo(() => materials.reduce((s, m) => s + (m.amount || 0), 0), [materials]);
+
+  const totalPercentage = useMemo(() => totalMass > 0 ? (totalAmount / totalMass * 100) : 0, [totalAmount, totalMass]);
 
   // Calculate cost in IDR using calculateCOGS for consistency (totalMass as basis)
   const totalCost = useMemo(() => {
